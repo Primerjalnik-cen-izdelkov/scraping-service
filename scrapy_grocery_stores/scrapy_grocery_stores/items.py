@@ -6,7 +6,9 @@
 import scrapy
 
 
-class ScrapyGroceryStoresItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class GroceryStoreItem(scrapy.Item):
+    # TODO(miha): We want to save: item name, price, weight, date of scrape
+    id    = scrapy.Field()
+    name  = scrapy.Field()
+    price = scrapy.Field()
+
