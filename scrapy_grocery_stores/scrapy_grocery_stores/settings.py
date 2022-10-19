@@ -19,6 +19,14 @@ NEWSPIDER_MODULE = 'scrapy_grocery_stores.spiders'
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
+# Setup output directory and file name for scraped items.
+FEEDS = {
+    'data/%(name)s/%(name)s_%(time)s.csv': {
+        'format': 'csv',
+    }
+}
+
+
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
 
