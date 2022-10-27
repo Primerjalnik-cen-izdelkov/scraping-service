@@ -8,7 +8,10 @@ import scrapy
 
 class GroceryStoreItem(scrapy.Item):
     # TODO(miha): We want to save: item name, price, weight, date of scrape
-    id    = scrapy.Field()
-    name  = scrapy.Field()
-    price = scrapy.Field()
+    id               = scrapy.Field()
+    name             = scrapy.Field()
+    price            = scrapy.Field()
+    discounted_price = scrapy.Field()
+    members_only     = scrapy.Field()
+    url              = scrapy.Field()
 
