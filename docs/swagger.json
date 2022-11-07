@@ -1,0 +1,38 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Service responsible for running scraping bots.",
+        "title": "Scraping service",
+        "contact": {
+            "name": "Miha",
+            "email": "mf8974@student.uni-lj.si"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.1"
+    },
+    "host": "localhost:1323",
+    "basePath": "/",
+    "paths": {
+        "/ping": {
+            "get": {
+                "description": "Get current service version.",
+                "produces": [
+                    "text/plain"
+                ],
+                "summary": "Returns current service version.",
+                "operationId": "ping",
+                "responses": {
+                    "200": {
+                        "description": "service version",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
