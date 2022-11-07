@@ -29,3 +29,9 @@ class MercatorSpider(scrapy.Spider):
 
         if page < 14:
             yield Request(self.api.format(page=page+1), cb_kwargs={"page":page+1})
+
+    def closed(self, reason):
+        if reason == "finished":
+            stats = self.crawler.stats.get_stats()
+            print("from spider_closed:")
+            print(stats)

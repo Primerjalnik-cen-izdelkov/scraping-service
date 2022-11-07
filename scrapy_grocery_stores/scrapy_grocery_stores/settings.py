@@ -71,9 +71,10 @@ DOWNLOAD_DELAY = 0.5
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'scrapy_grocery_stores.pipelines.ScrapyGroceryStoresPipeline': 300,
-#}
+ITEM_PIPELINES = {
+    'scrapy_grocery_stores.pipelines.ScrapyGroceryStoresPipeline': 300,
+    'scrapy_grocery_stores.pipelines.AddStatisticsToMongoDB': 400,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
