@@ -1,0 +1,26 @@
+basePath: /
+host: localhost:1323
+info:
+  contact:
+    email: mf8974@student.uni-lj.si
+    name: Miha
+  description: Service responsible for running scraping bots.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Scraping service
+  version: 1.0.1
+paths:
+  /ping:
+    get:
+      description: Get current service version.
+      operationId: ping
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: service version
+          schema:
+            type: string
+      summary: Returns current service version.
+swagger: "2.0"
