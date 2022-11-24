@@ -12,6 +12,7 @@ BOT_NAME = 'scrapy_grocery_stores'
 SPIDER_MODULES = ['scrapy_grocery_stores.spiders']
 NEWSPIDER_MODULE = 'scrapy_grocery_stores.spiders'
 
+LOG_LEVEL = "DEBUG"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'scrapy_grocery_stores (+http://www.yourdomain.com)'
@@ -74,9 +75,10 @@ DOWNLOAD_DELAY = 0.5
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'scrapy_grocery_stores.pipelines.ScrapyGroceryStoresPipeline': 300,
-#}
+ITEM_PIPELINES = {
+    'scrapy_grocery_stores.pipelines.ScrapyGroceryStoresPipeline': 300,
+    'scrapy_grocery_stores.pipelines.AddStatisticsToMongoDB': 400,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
