@@ -1,0 +1,12 @@
+FROM python:3.10-alpine
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY scrapy_grocery_stores/ ./scrapy_grocery_stores/
+
+COPY ./build/main .
+
+CMD ["./main"]

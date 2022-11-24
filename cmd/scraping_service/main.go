@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 
 	_ "scraping_service/docs"
 	"scraping_service/internal/api/rest"
@@ -15,7 +17,7 @@ import (
 )
 
 // @title Scraping service
-// @version 1.0.1
+// @version 0.0.1
 // @description Service responsible for running scraping bots.
 
 // @contact.name Miha
@@ -32,17 +34,24 @@ import (
 // @Success 200 {string} string "service version"
 // @Router /ping [get]
 func Ping(c echo.Context) error {
-	return c.String(http.StatusOK, "scraping_service, 0.0.1")
+	return c.String(http.StatusOK, os.Getenv("VERSION"))
 }
 
 // @host localhost:1323
 // @BasePath /
 func main() {
 	e := echo.New()
+	e.Use(middleware.Logger())
+
+	fmt.Println("Scraping service started, running on version: ", os.Getenv("VERSION"))
 
 	mongoDB, err := database.CreateDatabase("MongoDB")
 	if err != nil {
 		fmt.Println("mongoErr: ", err)
+	}
+	err = mongoDB.Ping()
+	if err != nil {
+		fmt.Println("mongoErr ping: ", err)
 	}
 	bs := service.CreateBotService(mongoDB)
 	rest := rest.CreateRestAPI(bs)
@@ -57,24 +66,65 @@ func main() {
 	*/
 	//e.Static("data", "./scrapy_grocery_stores")
 
+	// /v0/bots/{mercator}/cmd/scrape
+	// /v0/bots/{mercator}/files/
+	// /v0/bots/{mercator}/files/mercator_T324
+	// /v0/bots/{mercator}/stats
+	// /v0/bots/scrape
+	// /v0/bots/files
+	// /v0/bots/stats
+
 	fs := http.FileServer(http.Dir("./scrapy_grocery_stores/data"))
 	e.GET("/data/*", echo.WrapHandler(http.StripPrefix("/data/", fs)))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.GET("/ping", Ping)
-	e.GET("/bots", rest.GetAllBots)
-	// botName := c.Param("bot_name")
-	e.POST("/scrapeall", rest.ScrapeAllBots)
-	botName := e.Group(":bot_name")
+
+	// /bots/
+	botsGroup := e.Group("/bots")
 	{
-		botName.GET("/filenames", rest.GetBotFiles)
-		botName.GET("/files", rest.GetBotFiles)
-		botName.GET("/:file", rest.GetBotFile)
-		botName.POST("/scrape", rest.ScrapeBot)
-		botName.GET("/statistic", rest.GetBotStats)
-		botName.GET("/:file/statistic", rest.GetFileStats)
-		// TODO(miha): Get some health-check for the bots - ie. if the bot run was succesfull.
+		botsGroup.GET("", rest.GetBots)
+		botsGroup.GET("/files", rest.GetFiles)
+		botsGroup.GET("/logs", rest.GetLogs)
+		botsGroup.GET("/cmd", rest.GetCmds)
+		botsGroup.POST("/cmd/scrape", rest.PostCmdScrape)
+		botsGroup.POST("/cmd/stop", rest.PostCmdStop)
+		botsGroup.POST("/cmd/status", rest.PostCmdStatus)
+
+		// /bots/{bot_name}/
+		botNameGroup := botsGroup.Group("/:bot_name")
+		{
+			botNameGroup.GET("/cmd", rest.GetBotCmds)
+			botNameGroup.GET("/files", rest.GetBotFiles)
+			botNameGroup.GET("/logs", rest.GetBotLogs)
+            botNameGroup.GET("/logs/:file_name", rest.GetBotLog)
+			botNameGroup.GET("/files/:file_name", rest.GetBotFile)
+			botNameGroup.POST("/cmd/scrape", rest.PostBotCmdScrape)
+			botNameGroup.POST("/cmd/stop", rest.PostBotCmdStop)
+			botNameGroup.POST("/cmd/status", rest.PostBotCmdStatus)
+		}
 	}
+	/*
+		// botName := c.Param("bot_name")
+		e.POST("/scrapeall", rest.ScrapeAllBots)
+		e.GET("/statusall", rest.AllBotsStatus)
+		botGroup := e.Group(":bot_name")
+		{
+			botGroup.GET("/filenames", rest.GetBotFiles)
+			botGroup.GET("/files", rest.GetBotFiles)
+			botGroup.GET("/:file", rest.GetBotFile)
+			botGroup.POST("/scrape", rest.ScrapeBot)
+			botGroup.GET("/status", rest.BotStatus)
+			botGroup.GET("/statistic", rest.GetBotStats)
+			botGroup.GET("/:file/statistic", rest.GetFileStats)
+			// TODO(miha): Get some health-check for the bots - ie. if the bot run was succesfull.
+
+			cmdGroup := botGroup.Group("/cmd")
+			{
+				cmdGroup.GET("/status", rest.CmdStatus)
+			}
+		}
+	*/
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
