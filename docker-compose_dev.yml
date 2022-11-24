@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  mongo_server:
+    image: "mongo:latest"
+    container_name: mongo_server
+    ports:
+      - "27017:27017"
+    volumes:
+      - scraping_service_mongo_server_vol:/data/db
+    restart: unless-stopped
+    networks:
+      - scraping_service_net
+
+  scraping_service:
+    image: sleepygiantpandabear/scraping_service:dev
+    container_name: scraping_service
+    ports:
+      - "8080:1323"
+    restart: unless-stopped
+    networks:
+      - scraping_service_net
+    environment:
+           MONGODB_URI: mongodb://mongo_server:27017
+           VERSION: 0.0.4
+    depends_on:
+      - "mongo_server"
+
+volumes:
+  scraping_service_mongo_server_vol:
+
+networks:
+  scraping_service_net:
+    driver: bridge

@@ -6,8 +6,8 @@ import (
 
 type Databaser interface {
 	Ping() error
-	GetBotStats(botName, querry string) ([]models.FileStat, error)
-	GetFileStats(botName string, unixTime int64) (*models.FileStat, error)
+	GetBotLogs(botName string, qm map[string]string) ([]models.FileLog, error)
+	GetFileLogs(botName string, unixTime int64) (*models.FileLog, error)
 	GetBotFileNames(botName string) ([]models.File, error)
 }
 
@@ -26,17 +26,17 @@ func (db Database) CreateTable(tableName string) error {
 	return db.dber.Ping()
 }
 
-func (db Database) GetBotStats(botName, querry string) ([]models.FileStat, error) {
-	files, err := db.dber.GetBotStats(botName, querry)
+func (db Database) GetBotLogs(botName string, qm map[string]string) ([]models.FileLog, error) {
+	logs, err := db.dber.GetBotLogs(botName, qm)
 	if err != nil {
 		return nil, err
 	}
 
-	return files, nil
+	return logs, nil
 }
 
-func (db Database) GetFileStats(botName string, unixTime int64) (*models.FileStat, error) {
-	file, err := db.dber.GetFileStats(botName, unixTime)
+func (db Database) GetFileLogs(botName string, unixTime int64) (*models.FileLog, error) {
+	file, err := db.dber.GetFileLogs(botName, unixTime)
 	if err != nil {
 		return nil, err
 	}

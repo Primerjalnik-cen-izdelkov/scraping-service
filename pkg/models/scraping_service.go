@@ -7,8 +7,8 @@ import (
 )
 
 type Bot struct {
-	Name             string `json:"name"`
-	ItemScrapedCount int    `json:"item_scraped_count"`
+	Name       string `json:"name"`
+	FilesCount int    `json:"files_count"`
 }
 
 type Boter interface {
@@ -24,7 +24,7 @@ type File struct {
 	Name      string             `json:"name,omitempty" bson:"name,omitempty"`
 }
 
-type FileStat struct {
+type FileLog struct {
 	ID                               primitive.ObjectID `bson:"_id"`
 	LogCountInfo                     int                `bson:"log_count/INFO"`
 	LogCountDebug                    int                `bson:"log_count/DEBUG"`

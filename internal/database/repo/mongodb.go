@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"scraping_service/pkg/models"
 	"time"
+    "os"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -26,7 +27,10 @@ type MongoDB struct {
 }
 
 func CreateMongoDB() *MongoDB {
-	uri := "mongodb://localhost:27017"
+	// uri := "mongodb://localhost:27017"
+	//uri := "mongodb://mongo_server:27018"
+	uri := os.Getenv("MONGODB_URI")
+	fmt.Println("my uri is: ", uri)
 	ctx := context.TODO()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
@@ -52,6 +56,7 @@ func (db MongoDB) GetBotFileNames(botName string) ([]models.File, error) {
 	sort := bson.D{{"start_time", -1}}
 	cursor, err := botCollection.Find(db.Context, bson.D{}, options.Find().SetProjection(projection).SetSort(sort))
 	if err != nil {
+		fmt.Println("mongo cursor err:", err)
 		return nil, ErrMongoCursor
 	}
 
@@ -63,17 +68,35 @@ func (db MongoDB) GetBotFileNames(botName string) ([]models.File, error) {
 	return results, nil
 }
 
-func (db MongoDB) GetBotStats(botName, query string) ([]models.FileStat, error) {
+func (db MongoDB) GetBotLogs(botName string, qm map[string]string) ([]models.FileLog, error) {
+    // TODO(miha): We need to rename collection to logs, rename also in python
+    // file!
 	botCollection := db.Client.Database("stats").Collection(botName)
 
+    for key, val := range qm {
+        fmt.Println(key, val)
+    }
+
+    q := []bson.D{}
+    // p := []bson.D{}
+    // s := []bson.D{}
+
+    // NOTE(miha): Append querry parameters
+    if len(qm["querry"]) == 0 {
+        q = append(q, bson.D{})
+    } else {
+        q = append(q, bson.D{{"", qm["querry"]}})
+    }
+
 	//projection := bson.D{{"start_time", 1}}
-	sort := bson.D{{"start_time", -1}}
-	cursor, err := botCollection.Find(db.Context, bson.D{}, options.Find().SetSort(sort)) //SetProjection(projection).SetSort(sort))
+    sort := bson.D{{"start_time", -1}}
+    cursor, err := botCollection.Find(db.Context,  bson.M{"$and": q}, options.Find().SetSort(sort)) //SetProjection(projection).SetSort(sort))
 	if err != nil {
+		fmt.Println("mongo cursor err:", err)
 		return nil, ErrMongoCursor
 	}
 
-	var results []models.FileStat
+	var results []models.FileLog
 	if err = cursor.All(context.TODO(), &results); err != nil {
 		return nil, ErrMongoDecoding
 	}
@@ -81,7 +104,7 @@ func (db MongoDB) GetBotStats(botName, query string) ([]models.FileStat, error) 
 	return results, nil
 }
 
-func (db MongoDB) GetFileStats(botName string, unixTime int64) (*models.FileStat, error) {
+func (db MongoDB) GetFileLogs(botName string, unixTime int64) (*models.FileLog, error) {
 	botCollection := db.Client.Database("stats").Collection(botName)
 
 	/*
@@ -97,7 +120,7 @@ func (db MongoDB) GetFileStats(botName string, unixTime int64) (*models.FileStat
 
 	cursor := botCollection.FindOne(db.Context, bson.D{{"start_time", bson.D{{"$gte", gte}, {"$lt", lt}}}}, options.FindOne()) //SetProjection(projection).SetSort(sort))
 
-	var result models.FileStat
+	var result models.FileLog
 	err := cursor.Decode(&result)
 	if err != nil {
 		fmt.Println("err:", err)

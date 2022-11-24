@@ -27,6 +27,10 @@ FEEDS = {
     }
 }
 
+LOG_PATH = "./test_scrapy_logs"
+
+LOG_FILE = "test_scrapy_log.txt"
+
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
