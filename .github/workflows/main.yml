@@ -36,4 +36,4 @@ jobs:
         with:
           file: ./Dockerfile_with_maven_build
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/scraping_service:${{ steps.current-time.outputs.formattedTime }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/scraping_service:${{ steps.current-time.outputs.formattedTime }}
