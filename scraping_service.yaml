@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scraping-service-deployment
+  labels:
+    app: scraping-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scraping-service-deployment
+  template:
+    metadata:
+      labels:
+        app: scraping-service-deployment
+    spec:
+      containers:
+      - name: scraping-service-deployment
+        image: 'sleepygiantpandabear/scraping_service:dev'
+        ports:
+        - containerPort: 1323
+        env:
+        - name: MONGODB_URI
+          valueFrom: 
+            configMapKeyRef:
+              name: config-map
+              key: database_url
+        - name: VERSION
+          value: 0.0.1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scraping-service-service
+spec:
+  selector:
+    app: scraping-service-deployment
+  type: LoadBalancer  
+  ports:
+    - protocol: TCP
+      port: 1323
+      targetPort: 1323
+      nodePort: 30000
+

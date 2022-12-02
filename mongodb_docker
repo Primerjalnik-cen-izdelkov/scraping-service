@@ -1,0 +1,7 @@
+from mongo:6.0.2-focal
+
+EXPOSE 27017
+
+CMD ["mongod"]
+
+# run mongosh from the container: mongosh mongodb://host.docker.internal:27017
