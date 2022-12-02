@@ -197,7 +197,13 @@ func (api *RestAPI) GetBots(c echo.Context) error {
 		}, "  ")
 	}
 
-	return c.JSONPretty(http.StatusOK, bots, "  ")
+    data := struct {
+        bots []*models.Bot
+    }{
+        bots: bots,
+    }
+
+    return c.JSONPretty(http.StatusOK, models.JSONData{Data: data}, "  ")
 }
 
 func (api *RestAPI) GetFiles(c echo.Context) error {
@@ -271,6 +277,9 @@ func (api *RestAPI) GetBotLogs(c echo.Context) error {
 	qm["itemsScrapedLT"] = c.QueryParam("items_scraped.lt")
 	qm["itemsScrapedGT"] = c.QueryParam("items_scraped.gt")
 	qm["itemsScrapedSort"] = c.QueryParam("items_scraped.sort")
+
+    fmt.Println("do we get timeLT:", qm["timeLT"], c.QueryParam("time.lt"))
+    fmt.Println("do we get fields:", qm["fields"], c.QueryParam("fields"))
 
 	logs, err := api.bs.GetBotLogs(botName, qm)
 	if err != nil {

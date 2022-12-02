@@ -6,6 +6,7 @@
 
 # useful for handling different item types with a single interface
 import pymongo
+import os
 
 from itemadapter import ItemAdapter
 
@@ -19,7 +20,7 @@ class ScrapyGroceryStoresPipeline:
 class AddStatisticsToMongoDB:
     # TODO(miha): Add pymongo to requirements.txt
     def __init__(self):
-        self.client = pymongo.MongoClient("localhost", 27017)
+        self.client = pymongo.MongoClient(os.environ.get('MONGODB_URI'))
         self.db = self.client["stats"]
 
     def close_spider(self, spider):

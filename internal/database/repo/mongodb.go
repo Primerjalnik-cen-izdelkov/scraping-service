@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"scraping_service/pkg/common"
 	"scraping_service/pkg/models"
+	"strconv"
 	"time"
-    "os"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -73,20 +75,58 @@ func (db MongoDB) GetBotLogs(botName string, qm map[string]string) ([]models.Fil
     // file!
 	botCollection := db.Client.Database("stats").Collection(botName)
 
-    for key, val := range qm {
-        fmt.Println(key, val)
-    }
-
-    q := []bson.D{}
-    // p := []bson.D{}
-    // s := []bson.D{}
+    q := []bson.D{bson.D{{}}}
+    p := []bson.D{}
+    s := []bson.D{}
 
     // NOTE(miha): Append querry parameters
     if len(qm["querry"]) == 0 {
-        q = append(q, bson.D{})
+        // NOTE(miha): time.lt querry parameter.
+        if len(qm["timeLT"]) != 0 {
+            lt, err := common.QuerryParamParseTime(qm["timeLT"])
+            if err != nil {
+                // TODO
+            }
+            q = append(q, bson.D{{"start_time", bson.D{{"$lt", lt}}}})
+        }
+        if len(qm["timeGT"]) != 0 {
+            gt, err := common.QuerryParamParseTime(qm["timeGT"])
+            if err != nil {
+                // TODO
+            }
+            q = append(q, bson.D{{"start_time", bson.D{{"$gte", gt}}}})
+        }
+        if len(qm["itemsScrapedLT"]) != 0 {
+            lt, err := strconv.ParseInt(qm["itemsScrapedLT"], 10, 64)
+            if err != nil {
+                return nil, err
+            }
+            q = append(q, bson.D{{"items_scraped_count", bson.D{{"$lt", lt}}}})
+        }
+        if len(qm["itemsScrapedGT"]) != 0 {
+            gt, err := strconv.ParseInt(qm["itemsScrapedGT"], 10, 64)
+            if err != nil {
+                return nil, err
+            }
+            q = append(q, bson.D{{"items_scraped_count", bson.D{{"$gte", gt}}}})
+        }
     } else {
         q = append(q, bson.D{{"", qm["querry"]}})
     }
+
+    if len(qm["projection"]) == 0 {
+
+    } else {
+        p = append(p, bson.D{{"", qm["projection"]}})
+    }
+
+    if len(qm["sort"]) == 0 {
+
+    } else {
+        s = append(s, bson.D{{"", qm["sort"]}})
+    }
+
+    fmt.Println("mongodb querry:", bson.M{"$and": q})
 
 	//projection := bson.D{{"start_time", 1}}
     sort := bson.D{{"start_time", -1}}
@@ -128,4 +168,36 @@ func (db MongoDB) GetFileLogs(botName string, unixTime int64) (*models.FileLog, 
 	}
 
 	return &result, nil
+}
+
+
+func (db MongoDB) UpdateBot(botName string) error {
+    coll := db.Client.Database("dev").Collection("bots")
+    filter := bson.D{{"bot_name", botName}}
+    update := bson.M{"$set": bson.D{{"last_run", time.Now()}},
+                     "$inc": bson.D{{"logs_count", 1}}}
+    uo := options.Update().SetUpsert(true)
+    _, err := coll.UpdateOne(db.Context, filter, update, uo)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+func (db MongoDB) GetBot(botName string) (*models.Bot, error) {
+    var bot models.Bot
+
+    coll := db.Client.Database("dev").Collection("bots")
+	cursor := coll.FindOne(db.Context, bson.D{{"bot_name", botName}}, options.FindOne())
+
+	err := cursor.Decode(&bot)
+	if err != nil {
+		fmt.Println("err:", err)
+		return nil, ErrMongoDecoding
+	}
+
+    fmt.Println("GetBot bot:", bot)
+
+    return &bot, nil
 }

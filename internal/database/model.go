@@ -9,6 +9,8 @@ type Databaser interface {
 	GetBotLogs(botName string, qm map[string]string) ([]models.FileLog, error)
 	GetFileLogs(botName string, unixTime int64) (*models.FileLog, error)
 	GetBotFileNames(botName string) ([]models.File, error)
+    UpdateBot(botName string) error
+    GetBot(botName string) (*models.Bot, error)
 }
 
 // TODO(miha): Should we call functions from here? This way we only need to
@@ -51,4 +53,22 @@ func (db Database) GetBotFileNames(botName string) ([]models.File, error) {
 	}
 
 	return files, nil
+}
+
+func (db Database) UpdateBot(botName string) error {
+	err := db.dber.UpdateBot(botName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db Database) GetBot(botName string) (*models.Bot, error) {
+	bot, err := db.dber.GetBot(botName)
+	if err != nil {
+		return nil, err
+	}
+
+	return bot, nil
 }

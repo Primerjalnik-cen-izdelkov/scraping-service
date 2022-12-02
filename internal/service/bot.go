@@ -31,7 +31,7 @@ func CreateBotService(d *database.Database) *BotService {
 	return &BotService{db: d, botPID: make(map[string]*exec.Cmd)}
 }
 
-func (bs *BotService) GetBots() ([]string, error) {
+func (bs *BotService) BotNames() ([]string, error) {
 	files, err := os.Open("./scrapy_grocery_stores/scrapy_grocery_stores/spiders")
 	if err != nil {
 		return nil, ErrDirectoryNotFound
@@ -56,6 +56,30 @@ func (bs *BotService) GetBots() ([]string, error) {
 		trimmedDir := dir[0:strings.Index(dir, ".")]
 
 		bots = append(bots, trimmedDir)
+	}
+
+	return bots, nil
+}
+
+
+func (bs *BotService) GetBots() ([]*models.Bot, error) {
+    botNames, err := bs.BotNames()
+    if err != nil {
+        return nil, err
+    }
+
+	bots := []*models.Bot{}
+
+	for _, name := range botNames {
+        bot, err := bs.db.GetBot(name)
+        if err != nil {
+
+        }
+
+        status := bs.BotCmdStatus(name)
+        bot.Status = status
+
+		bots = append(bots, bot)
 	}
 
 	return bots, nil
@@ -93,7 +117,7 @@ func (bs *BotService) GetCmds() error {
 }
 
 func (bs *BotService) PostCmdScrape() error {
-	bots, err := bs.GetBots()
+	bots, err := bs.BotNames()
 	if err != nil {
 		return err
 	}
@@ -144,6 +168,11 @@ func (bs *BotService) PostCmdScrape() error {
 		// return errors!
 		go func(bot string) {
 			err := cmd.Wait()
+			if err != nil {
+
+			}
+
+            err = bs.db.UpdateBot(bot)
 			if err != nil {
 
 			}
@@ -354,15 +383,10 @@ func (bs *BotService) BotCmdStop(botName string) error {
     }
 }
 
-// TODO(miha): Move this to some other place in /internal/...
-type BotStatus struct {
-    Running bool
-}
-
-func (bs *BotService) BotCmdStatus(botName string) *BotStatus {
+func (bs *BotService) BotCmdStatus(botName string) *models.BotStatus {
     if _, ok := bs.botPID[botName]; ok {
-        return &BotStatus{Running: true}
+        return &models.BotStatus{Running: true}
     } else {
-        return &BotStatus{Running: false}
+        return &models.BotStatus{Running: false}
     }
 }

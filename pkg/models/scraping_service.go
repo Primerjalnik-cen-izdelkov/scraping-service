@@ -7,8 +7,10 @@ import (
 )
 
 type Bot struct {
-	Name       string `json:"name"`
-	FilesCount int    `json:"files_count"`
+    Name       string     `json:"name" bson:"bot_name"`
+    Status     *BotStatus `json:"status" bson:"status"`
+    LastRun    time.Time  `json:"last_run" bson:"last_run"`
+    LogsCount  int        `json:"logs_count" bson:"logs_count"`
 }
 
 type Boter interface {
@@ -16,6 +18,10 @@ type Boter interface {
 	ScrapeAll() error
 	Scrape(botName string) error
 	Stats(botName string) (string, error)
+}
+
+type BotStatus struct {
+    Running bool `json:"running"`
 }
 
 type File struct {
