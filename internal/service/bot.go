@@ -177,6 +177,7 @@ func (bs *BotService) PostCmdScrape() error {
 			if err != nil {
 
 			}
+            delete(bs.botPID, bot)
 
 			fmt.Println("process finished for bot: ", bot)
 		}(bot)
@@ -338,6 +339,7 @@ func (bs *BotService) CmdStatus(botName string) {
 }
 
 func (bs *BotService) BotCmdScrape(botName string) (int, error) {
+    fmt.Println("SCRASPING SOMETING WUWUUWUWUWU")
 	// NOTE(miha): Check if python is installed on the system.
     _, err := exec.LookPath("python")
 	if err != nil {
@@ -368,11 +370,11 @@ func (bs *BotService) BotCmdScrape(botName string) (int, error) {
         if err != nil {
 
         }
+        fmt.Println("here is the botPID: ", bs.botPID)
+        fmt.Println("this work?")
 
         delete(bs.botPID, botName)
         fmt.Println("process finished for bot: ", botName)
-        fmt.Println("here is the botPID: ", bs.botPID)
-        fmt.Println("this work?")
     }(botName)
 
 	return cmd.Process.Pid, nil

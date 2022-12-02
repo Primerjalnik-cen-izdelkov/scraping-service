@@ -13,7 +13,7 @@ services:
       - scraping_service_net
 
   scraping_service:
-    image: sleepygiantpandabear/scraping_service:dev
+    image: sleepygiantpandabear/scraping_service:latest
     container_name: scraping_service
     ports:
       - "8080:1323"

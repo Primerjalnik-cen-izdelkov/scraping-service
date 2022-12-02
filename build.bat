@@ -38,7 +38,7 @@ goto :end
        goto :end
     )
 	echo Setting up docker
-	docker build -t sleepygiantpandabear/scraping_service:dev . -f Dockerfile_dev
+	docker build -t sleepygiantpandabear/scraping_service:latest . -f Dockerfile
 	echo Setting up docker-compose
 	docker compose -f ./docker-compose_dev.yml kill
 	docker compose -f ./docker-compose_dev.yml build 
