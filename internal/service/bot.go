@@ -371,6 +371,7 @@ func (bs *BotService) BotCmdScrape(botName string) (int, error) {
 
         delete(bs.botPID, botName)
         fmt.Println("process finished for bot: ", botName)
+        fmt.Println("here is the botPID: ", bs.botPID)
     }(botName)
 
 	return cmd.Process.Pid, nil
