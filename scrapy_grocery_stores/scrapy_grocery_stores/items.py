@@ -14,4 +14,7 @@ class GroceryStoreItem(scrapy.Item):
     discounted_price = scrapy.Field()
     members_only     = scrapy.Field()
     url              = scrapy.Field()
-
+    offer_start      = scrapy.Field()
+    offer_end        = scrapy.Field()
+    product_image    = scrapy.Field()
+    flyer_url        = scrapy.Field()
