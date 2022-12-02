@@ -36,4 +36,4 @@ jobs:
         with:
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/scraping_service:${{ steps.current-time.outputs.formattedTime }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/scraping_service:latest
