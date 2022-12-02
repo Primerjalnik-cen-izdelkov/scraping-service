@@ -2,6 +2,7 @@ package database
 
 import (
 	"scraping_service/pkg/models"
+    "fmt"
 )
 
 type Databaser interface {
@@ -69,6 +70,8 @@ func (db Database) GetBot(botName string) (*models.Bot, error) {
 	if err != nil {
 		return nil, err
 	}
+
+    fmt.Println("model.go:", bot)
 
 	return bot, nil
 }

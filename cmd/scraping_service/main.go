@@ -80,8 +80,10 @@ func main() {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.GET("/ping", Ping)
 
+	versionGroup := e.Group("/v1")
+
 	// /bots/
-	botsGroup := e.Group("/bots")
+	botsGroup := versionGroup.Group("/bots")
 	{
 		botsGroup.GET("", rest.GetBots)
 		botsGroup.GET("/files", rest.GetFiles)

@@ -198,9 +198,9 @@ func (api *RestAPI) GetBots(c echo.Context) error {
 	}
 
     data := struct {
-        bots []*models.Bot
+        Bots []*models.Bot
     }{
-        bots: bots,
+        Bots: bots,
     }
 
     return c.JSONPretty(http.StatusOK, models.JSONData{Data: data}, "  ")
