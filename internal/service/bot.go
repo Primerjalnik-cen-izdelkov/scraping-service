@@ -64,6 +64,7 @@ func (bs *BotService) BotNames() ([]string, error) {
 
 func (bs *BotService) GetBots() ([]*models.Bot, error) {
     botNames, err := bs.BotNames()
+    fmt.Println("BotNames:", botNames)
     if err != nil {
         return nil, err
     }
