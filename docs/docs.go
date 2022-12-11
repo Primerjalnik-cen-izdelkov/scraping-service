@@ -23,6 +23,415 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/bots": {
+            "get": {
+                "description": "We are returning list of type '[]*models.Bot' for all the bots we have created.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Returns array of all avaiable bots.",
+                "operationId": "get_bots",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/bots/cmd": {
+            "get": {
+                "description": "Returns all avaiable commands that can be run on the /bots/cmd/{cmd_name} endpoint with POST request.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Return all avaiable commands.",
+                "operationId": "get_cmd",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/bots/files": {
+            "get": {
+                "description": "We are returning array '[]models.File' that contains all the filenames with scraped data. All queries are on the day basis - meaning we only care about year, month, and day.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Returns array of the filenames that contain scraped data.",
+                "operationId": "get_files",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "return files where given date is the same as the file id",
+                        "name": "id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "return files where given date is the same as the file date",
+                        "name": "date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "return files where given date is greater than the file date",
+                        "name": "date.gt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "return files where given date is less than the file date",
+                        "name": "date.lt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "return files where given name is the same as the bot name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "define how many results will be returned",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "define on which field we sort result (prefix with '-' for reversed sort)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "select which fields to include (field=field_name) or exclude (field=-field_name) from the query. Note that you can't include and exclude fields at the same time.",
+                        "name": "field",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/bots/logs": {
+            "get": {
+                "description": "We are returning array '[]models.FileLog' that contains all the information of runs of the scraped data. All queries are on the day basis - meaning we only care about year, month, and day.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Retruns array of the logs that contain scraped data information (items scraped,...)",
+                "operationId": "get_logs",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "return files where given id is the same as the file id",
+                        "name": "id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "return files where given date is the same as the file date",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "return files where given date is greater than the file date",
+                        "name": "start_time.gt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "return files where given date is less than the file date",
+                        "name": "start_time.lt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "description": "return files where given request count is the same as the file request count",
+                        "name": "request_count",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "return files where given request count is greater than the file request count",
+                        "name": "request_count.gt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "return files where given request count is less than the file request count",
+                        "name": "request_count.lt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "description": "return files where given response count is the same as the file response count",
+                        "name": "response_count",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "return files where given response count is greater than the file response count",
+                        "name": "response_count.gt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "return files where given response count is less than the file response count",
+                        "name": "response_count.lt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "description": "return files where given 404 count is the same as the file 404 count",
+                        "name": "404",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "return files where given 404 count is greater than the file 404 count",
+                        "name": "404.gt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "return files where given 404 count is less than the file 404 count",
+                        "name": "404.lt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "description": "return files where given item scraped is the same as the file item scraped",
+                        "name": "item_scraped",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "return files where given item scraped is greater than the file item scraped",
+                        "name": "item_scraped.gt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "return files where given item scraped is less than the file item scraped",
+                        "name": "item_scraped.lt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "return files where given name is the same as the bot name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "define how many results will be returned",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "define on which field we sort result (prefix with '-' for reversed sort)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "select which fields to include (field=field_name) or exclude (field=-field_name) from the query. Note that you can't include and exclude fields at the same time.",
+                        "name": "field",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/bots/{bot_name}/cmds": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Get bot commands for the given bot",
+                "operationId": "get_bot_cmd",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "define for which bot we get commands",
+                        "name": "botName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/cmd/scrape": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Send command to start scraping all the bots",
+                "operationId": "post_cmd_scrape",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/cmd/stop": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Send command to stop all the bots",
+                "operationId": "post_cmd_stop",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
         "/ping": {
             "get": {
                 "description": "Get current service version.",
@@ -41,14 +450,43 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "definitions": {
+        "models.JSONData": {
+            "type": "object",
+            "properties": {
+                "data": {}
+            }
+        },
+        "models.JSONError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "$ref": "#/definitions/models.JSONErrorInfo"
+                }
+            }
+        },
+        "models.JSONErrorInfo": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 404
+                },
+                "message": {
+                    "type": "string",
+                    "example": "not found"
+                }
+            }
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0.1",
+	Version:          "",
 	Host:             "localhost:1323",
-	BasePath:         "/",
+	BasePath:         "/v1",
 	Schemes:          []string{},
 	Title:            "Scraping service",
 	Description:      "Service responsible for running scraping bots.",

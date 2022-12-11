@@ -27,6 +27,8 @@ goto :end
 :dev
 	echo Deleting previous version of the golang app
     del build\main
+	echo Generating swagger docs
+    swag init -g ./cmd/scraping_service/main.go
 	echo Building golang app
 	set GOARCH=amd64
 	set GOOS=linux
@@ -38,7 +40,7 @@ goto :end
        goto :end
     )
 	echo Setting up docker
-	docker build -t sleepygiantpandabear/scraping_service:latest . -f Dockerfile
+	docker build -t sleepygiantpandabear/scraping_service:dev . -f Dockerfile_dev
 	echo Setting up docker-compose
 	docker compose -f ./docker-compose_dev.yml kill
 	docker compose -f ./docker-compose_dev.yml build 

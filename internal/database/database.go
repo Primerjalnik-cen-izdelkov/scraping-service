@@ -8,6 +8,7 @@ import (
 var ErrNotDatabaser = errors.New("Struct is not a Databaser")
 
 type Database struct {
+    name string
 	dber Databaser
 }
 
@@ -17,7 +18,7 @@ func CreateDatabase(dbName string) (*Database, error) {
 		{
 			db := &repo.MongoDB{}
 			if IsDatabaser(db) {
-				return &Database{dber: repo.CreateMongoDB()}, nil
+                return &Database{name: "MongoDB", dber: repo.CreateMongoDB()}, nil
 			} else {
 				return nil, ErrNotDatabaser
 			}

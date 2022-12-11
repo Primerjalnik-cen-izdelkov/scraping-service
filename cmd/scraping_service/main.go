@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	_ "scraping_service/docs"
+	swaggerDocs "scraping_service/docs"
 	"scraping_service/internal/api/rest"
 	"scraping_service/internal/database"
 	"scraping_service/internal/service"
@@ -17,7 +17,6 @@ import (
 )
 
 // @title Scraping service
-// @version 0.0.1
 // @description Service responsible for running scraping bots.
 
 // @contact.name Miha
@@ -37,11 +36,20 @@ func Ping(c echo.Context) error {
 	return c.String(http.StatusOK, os.Getenv("VERSION"))
 }
 
-// @host localhost:1323
-// @BasePath /
+// @Host localhost:1323
+// TODO(miha): Put this into env variable
+// @BasePath /v1
 func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
+    e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+        AllowOrigins: []string{"http://localhost:5173"},
+        // TODO(miha): What are allowHeaders? dig into this...
+        AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+    }))
+
+    // NOTE(miha): Set swagger's version of the API.
+    swaggerDocs.SwaggerInfo.Version = fmt.Sprintf("%s", os.Getenv("VERSION"))
 
 	fmt.Println("Scraping service started, running on version: ", os.Getenv("VERSION"))
 
@@ -91,7 +99,7 @@ func main() {
 		botsGroup.GET("/cmd", rest.GetCmds)
 		botsGroup.POST("/cmd/scrape", rest.PostCmdScrape)
 		botsGroup.POST("/cmd/stop", rest.PostCmdStop)
-		botsGroup.POST("/cmd/status", rest.PostCmdStatus)
+		//botsGroup.POST("/cmd/status", rest.PostCmdStatus)
 
 		// /bots/{bot_name}/
 		botNameGroup := botsGroup.Group("/:bot_name")
@@ -99,7 +107,7 @@ func main() {
 			botNameGroup.GET("/cmd", rest.GetBotCmds)
 			botNameGroup.GET("/files", rest.GetBotFiles)
 			botNameGroup.GET("/logs", rest.GetBotLogs)
-            botNameGroup.GET("/logs/:file_name", rest.GetBotLog)
+            //botNameGroup.GET("/logs/:file_name", rest.GetBotLog)
 			botNameGroup.GET("/files/:file_name", rest.GetBotFile)
 			botNameGroup.POST("/cmd/scrape", rest.PostBotCmdScrape)
 			botNameGroup.POST("/cmd/stop", rest.PostBotCmdStop)

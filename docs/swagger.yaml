@@ -1,4 +1,23 @@
-basePath: /
+basePath: /v1
+definitions:
+  models.JSONData:
+    properties:
+      data: {}
+    type: object
+  models.JSONError:
+    properties:
+      error:
+        $ref: '#/definitions/models.JSONErrorInfo'
+    type: object
+  models.JSONErrorInfo:
+    properties:
+      code:
+        example: 404
+        type: integer
+      message:
+        example: not found
+        type: string
+    type: object
 host: localhost:1323
 info:
   contact:
@@ -9,8 +28,303 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   title: Scraping service
-  version: 1.0.1
 paths:
+  /bots:
+    get:
+      description: We are returning list of type '[]*models.Bot' for all the bots
+        we have created.
+      operationId: get_bots
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Returns array of all avaiable bots.
+      tags:
+      - bots
+  /bots/{bot_name}/cmds:
+    get:
+      operationId: get_bot_cmd
+      parameters:
+      - description: define for which bot we get commands
+        in: path
+        name: botName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Get bot commands for the given bot
+      tags:
+      - bots
+  /bots/cmd:
+    get:
+      description: Returns all avaiable commands that can be run on the /bots/cmd/{cmd_name}
+        endpoint with POST request.
+      operationId: get_cmd
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Return all avaiable commands.
+      tags:
+      - bots
+  /bots/files:
+    get:
+      description: We are returning array '[]models.File' that contains all the filenames
+        with scraped data. All queries are on the day basis - meaning we only care
+        about year, month, and day.
+      operationId: get_files
+      parameters:
+      - description: return files where given date is the same as the file id
+        in: query
+        items:
+          type: string
+        name: id
+        type: array
+      - description: return files where given date is the same as the file date
+        in: query
+        items:
+          type: string
+        name: date
+        type: array
+      - description: return files where given date is greater than the file date
+        in: query
+        name: date.gt
+        type: string
+      - description: return files where given date is less than the file date
+        in: query
+        name: date.lt
+        type: string
+      - description: return files where given name is the same as the bot name
+        in: query
+        items:
+          type: string
+        name: name
+        type: array
+      - description: define how many results will be returned
+        in: query
+        name: limit
+        type: integer
+      - description: define on which field we sort result (prefix with '-' for reversed
+          sort)
+        in: query
+        items:
+          type: string
+        name: sort
+        type: array
+      - description: select which fields to include (field=field_name) or exclude
+          (field=-field_name) from the query. Note that you can't include and exclude
+          fields at the same time.
+        in: query
+        items:
+          type: string
+        name: field
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Returns array of the filenames that contain scraped data.
+      tags:
+      - bots
+  /bots/logs:
+    get:
+      description: We are returning array '[]models.FileLog' that contains all the
+        information of runs of the scraped data. All queries are on the day basis
+        - meaning we only care about year, month, and day.
+      operationId: get_logs
+      parameters:
+      - description: return files where given id is the same as the file id
+        in: query
+        items:
+          type: string
+        name: id
+        type: array
+      - description: return files where given date is the same as the file date
+        in: query
+        items:
+          type: string
+        name: start_time
+        type: array
+      - description: return files where given date is greater than the file date
+        in: query
+        name: start_time.gt
+        type: integer
+      - description: return files where given date is less than the file date
+        in: query
+        name: start_time.lt
+        type: integer
+      - description: return files where given request count is the same as the file
+          request count
+        in: query
+        items:
+          type: integer
+        name: request_count
+        type: array
+      - description: return files where given request count is greater than the file
+          request count
+        in: query
+        name: request_count.gt
+        type: integer
+      - description: return files where given request count is less than the file
+          request count
+        in: query
+        name: request_count.lt
+        type: integer
+      - description: return files where given response count is the same as the file
+          response count
+        in: query
+        items:
+          type: integer
+        name: response_count
+        type: array
+      - description: return files where given response count is greater than the file
+          response count
+        in: query
+        name: response_count.gt
+        type: integer
+      - description: return files where given response count is less than the file
+          response count
+        in: query
+        name: response_count.lt
+        type: integer
+      - description: return files where given 404 count is the same as the file 404
+          count
+        in: query
+        items:
+          type: integer
+        name: "404"
+        type: array
+      - description: return files where given 404 count is greater than the file 404
+          count
+        in: query
+        name: 404.gt
+        type: integer
+      - description: return files where given 404 count is less than the file 404
+          count
+        in: query
+        name: 404.lt
+        type: integer
+      - description: return files where given item scraped is the same as the file
+          item scraped
+        in: query
+        items:
+          type: integer
+        name: item_scraped
+        type: array
+      - description: return files where given item scraped is greater than the file
+          item scraped
+        in: query
+        name: item_scraped.gt
+        type: integer
+      - description: return files where given item scraped is less than the file item
+          scraped
+        in: query
+        name: item_scraped.lt
+        type: integer
+      - description: return files where given name is the same as the bot name
+        in: query
+        items:
+          type: string
+        name: name
+        type: array
+      - description: define how many results will be returned
+        in: query
+        name: limit
+        type: integer
+      - description: define on which field we sort result (prefix with '-' for reversed
+          sort)
+        in: query
+        items:
+          type: string
+        name: sort
+        type: array
+      - description: select which fields to include (field=field_name) or exclude
+          (field=-field_name) from the query. Note that you can't include and exclude
+          fields at the same time.
+        in: query
+        items:
+          type: string
+        name: field
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Retruns array of the logs that contain scraped data information (items
+        scraped,...)
+      tags:
+      - bots
+  /cmd/scrape:
+    post:
+      operationId: post_cmd_scrape
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Send command to start scraping all the bots
+      tags:
+      - bots
+  /cmd/stop:
+    post:
+      operationId: post_cmd_stop
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Send command to stop all the bots
+      tags:
+      - bots
   /ping:
     get:
       description: Get current service version.
