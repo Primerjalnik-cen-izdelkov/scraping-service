@@ -123,19 +123,7 @@ func (bs *BotService) GetBots(qp url.Values) ([]*models.Bot, error) {
         status := bs.BotCmdStatus(name)
         bot.Status = status
 
-        if qp.Get("running") != "" {
-            if qp.Get("running") == "true" {
-                if bot.Status.Running {
-                    bots = append(bots, bot)
-                }
-            } else {
-                if !bot.Status.Running {
-                    bots = append(bots, bot)
-                }
-            }
-        } else {
-            bots = append(bots, bot)
-        }
+        bots = append(bots, bot)
 	}
 
 	return bots, nil

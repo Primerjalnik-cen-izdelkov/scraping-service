@@ -228,6 +228,7 @@ func (db MongoDB) GetBot(botName string, qp url.Values) (*models.Bot, error) {
     u = common.QueryIntGreater(u, q.LogsCountGt, "logs_count")
     u = common.QueryIntLess(u, q.LogsCountLt, "logs_count")
     filter := fet.Build(u...)
+    _ = filter
 
     // NOTE(miha): Set limit and sort options if the query parameter exists.
     opts := options.FindOne()
@@ -236,7 +237,7 @@ func (db MongoDB) GetBot(botName string, qp url.Values) (*models.Bot, error) {
     // NOTE(miha): Select collection and execute query to find bot with
     // 'botName'.
     coll := db.Client.Database("dev").Collection("bots")
-	cursor := coll.FindOne(db.Context, filter, opts)
+	cursor := coll.FindOne(db.Context, bson.D{{"bot_name", botName}}, opts)
 
     // NOTE(miha): Decode results into variable 'bot' or return error.
     var bot models.Bot
