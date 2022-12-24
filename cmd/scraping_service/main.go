@@ -36,6 +36,22 @@ func Ping(c echo.Context) error {
 	return c.String(http.StatusOK, os.Getenv("VERSION"))
 }
 
+// TODO(miha): Put more things into ENV variables
+// TODO(miha): Create auth mechanism (check for echos framework website if they
+// already have something) and use elephant postgres database to store
+// credentials.
+
+// TODO(miha): Logging
+//  - change gelfs source code so zerolog don't short write
+//  - check if graylog is online with ping
+//  - create new zerolog multiple logger for: stdout, file, graylog
+//  - add logs through service
+//  - setup echo to use zerolog
+
+// TODO(miha): Metrics
+//  - use prometheus
+//  - great tutorial on echos framework to combine with prometeus
+
 // @Host localhost:1323
 // TODO(miha): Put this into env variable
 // @BasePath /v1
