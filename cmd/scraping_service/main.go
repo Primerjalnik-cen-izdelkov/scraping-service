@@ -40,6 +40,8 @@ func Ping(c echo.Context) error {
 // TODO(miha): Create auth mechanism (check for echos framework website if they
 // already have something) and use elephant postgres database to store
 // credentials.
+// TODO(miha): Add correlation IDs
+// TODO(miha): Add healthchecks in docker (and kubernetes?)
 
 // TODO(miha): Logging
 //  - change gelfs source code so zerolog don't short write
