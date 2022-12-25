@@ -4,9 +4,17 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+    "path"
+    "context"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+    "github.com/go-ping/ping"
+    "github.com/rs/zerolog"
+    "gopkg.in/Graylog2/go-gelf.v1/gelf"
+    "github.com/rs/xid"
+    "github.com/labstack/echo-contrib/prometheus"
 
 	swaggerDocs "scraping_service/docs"
 	"scraping_service/internal/api/rest"
@@ -36,21 +44,44 @@ func Ping(c echo.Context) error {
 	return c.String(http.StatusOK, os.Getenv("VERSION"))
 }
 
+var (
+	HeaderCorrelationID = "X-Correlation-Id"
+	KeyCorrelationID    = "correlationid"
+)
+
+func CorrelationIdMiddleware() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			req := c.Request()
+			id := req.Header.Get(HeaderCorrelationID)
+			if id == "" {
+                id = xid.New().String()
+			}
+			c.Response().Header().Set(HeaderCorrelationID, id)
+			newreq := req.WithContext(context.WithValue(req.Context(), KeyCorrelationID, id))
+			c.SetRequest(newreq)
+			return next(c)
+		}
+	}
+}
+
 // TODO(miha): Put more things into ENV variables
 // TODO(miha): Create auth mechanism (check for echos framework website if they
 // already have something) and use elephant postgres database to store
 // credentials.
-// TODO(miha): Add correlation IDs
+// DONE(miha): Add correlation IDs
 // TODO(miha): Add healthchecks in docker (and kubernetes?)
 
 // TODO(miha): Logging
 //  - change gelfs source code so zerolog don't short write
 //  - check if graylog is online with ping
 //  - create new zerolog multiple logger for: stdout, file, graylog
-//  - add logs through service
+    //  - add logs through service
 //  - setup echo to use zerolog
+//  - add correlation ID (rs/xid package)
+    //  - add lumberjack package for rotating logs
 
-// TODO(miha): Metrics
+// DONE(miha): Metrics
 //  - use prometheus
 //  - great tutorial on echos framework to combine with prometeus
 
@@ -58,13 +89,72 @@ func Ping(c echo.Context) error {
 // TODO(miha): Put this into env variable
 // @BasePath /v1
 func main() {
+    // NOTE(miha): Init logger
+    graylogAddress := os.Getenv("GRAYLOG_ADDR") 
+    // TODO(miha): ENV to set global level of graylog
+    gelfWriter, err := gelf.NewWriter(graylogAddress)
+    useGraylog := true
+
+    // NOTE(miha): Create a logging file, get name from the ENV variable
+    // LOG_FILE.
+    logFileName := os.Getenv("LOG_FILE")
+    logFile, err := os.OpenFile(
+        path.Join("/logs", logFileName),
+        os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+        0664,
+    )
+    if err != nil {
+        fmt.Printf("Cannot create file %s\n", logFileName)
+        fmt.Println(err)
+    }
+    defer logFile.Close()
+
+    // NOTE(miha): Try to ping graylog address. If it is not accessible, don't
+    // add gelfWriter as a zerolog source.
+    pinger, err := ping.NewPinger(graylogAddress)
+    if err != nil {
+        useGraylog = false
+        fmt.Printf("Logging service graylog at address %s is not avaiable.\n", graylogAddress)
+    }
+
+    // NOTE(miha): Add sources to zerolog, ie. add or ignore gelfWriter.
+    var multi zerolog.LevelWriter
+    if useGraylog {
+        multi = zerolog.MultiLevelWriter(os.Stdout, logFile, gelfWriter)
+    } else {
+        multi = zerolog.MultiLevelWriter(os.Stdout, logFile)
+    }
+
+    // NOTE(miha): Create our logger
+    logger := zerolog.New(multi).With().Timestamp().Caller().Logger()
+
+    _, _, _, _, _ = gelfWriter, pinger, logFile, multi, logger
+
 	e := echo.New()
-	e.Use(middleware.Logger())
+	//e.Use(middleware.Logger())
     e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
         AllowOrigins: []string{"http://localhost:5173"},
         // TODO(miha): What are allowHeaders? dig into this...
         AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
     }))
+    // NOTE(miha): Setup echo to use zerolog.
+    e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+        LogURI:    true,
+        LogStatus: true,
+        LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+            logger.Info().
+                Str("URI", v.URI).
+                Int("status", v.Status).
+                Msg("request")
+
+            return nil
+        },
+    }))
+    e.Use(CorrelationIdMiddleware())
+
+    // NOTE(miha): Setup prometheus metrics.
+    p := prometheus.NewPrometheus("echo", nil)
+    p.Use(e)
 
     // NOTE(miha): Set swagger's version of the API.
     swaggerDocs.SwaggerInfo.Version = fmt.Sprintf("%s", os.Getenv("VERSION"))
@@ -80,7 +170,7 @@ func main() {
 		fmt.Println("mongoErr ping: ", err)
 	}
 	bs := service.CreateBotService(mongoDB)
-	rest := rest.CreateRestAPI(bs)
+	rest := rest.CreateRestAPI(bs, &logger)
 
 	/* NOTE(miha): How to check if Boter interface is implemented.
 	var pp interface{} = bs
