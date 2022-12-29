@@ -15,8 +15,8 @@ type RestAPI struct {
     logger *zerolog.Logger
 }
 
-func CreateRestAPI(service *service.BotService, logger *zerolog.Logger) *RestAPI {
-    res := &RestAPI{bs: service, logger: logger}
+func CreateRestAPI(service *service.BotService) *RestAPI {
+    res := &RestAPI{bs: service}
     return res
 }
 
@@ -33,7 +33,7 @@ func (api *RestAPI) GetBots(c echo.Context) error {
 
 	bots, err := api.bs.GetBots(qp)
 	if err != nil {
-        api.logger.Error().Err(err).Msg(err.Error())
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSONPretty(http.StatusInternalServerError, models.JSONError{
 			Error: models.JSONErrorInfo{
 				Code:    http.StatusInternalServerError,
@@ -71,7 +71,7 @@ func (api *RestAPI) GetFiles(c echo.Context) error {
     
 	files, err := api.bs.GetFiles(qp)
 	if err != nil {
-        api.logger.Error().Err(err).Msg(err.Error())
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSONPretty(http.StatusInternalServerError,
             models.JSONError{
                 Error: models.JSONErrorInfo{
@@ -122,7 +122,7 @@ func (api *RestAPI) GetLogs(c echo.Context) error {
 
 	logs, err := api.bs.GetLogs(qp)
 	if err != nil {
-        api.logger.Error().Err(err).Msg(err.Error())
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSONPretty(http.StatusInternalServerError,
             models.JSONError{
                 Error: models.JSONErrorInfo{
@@ -178,7 +178,7 @@ func (api *RestAPI) GetCmds(c echo.Context) error {
 func (api *RestAPI) PostCmdScrape(c echo.Context) error {
 	err := api.bs.PostCmdScrape()
 	if err != nil {
-        api.logger.Error().Err(err).Msg(err.Error())
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSONPretty(http.StatusInternalServerError,
 			models.JSONError{Error: models.JSONErrorInfo{Code: 500, Message: err.Error()}}, "  ")
 	}
@@ -196,7 +196,7 @@ func (api *RestAPI) PostCmdScrape(c echo.Context) error {
 func (api *RestAPI) PostCmdStop(c echo.Context) error {
 	err := api.bs.PostCmdStop()
 	if err != nil {
-        api.logger.Error().Err(err).Msg(err.Error())
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSONPretty(http.StatusInternalServerError,
 			models.JSONError{Error: models.JSONErrorInfo{Code: 500, Message: err.Error()}}, "  ")
 	}
@@ -266,7 +266,7 @@ func (api *RestAPI) GetBotLogs(c echo.Context) error {
 
 	logs, err := api.bs.GetBotLogs(botName, qm)
 	if err != nil {
-        api.logger.Error().Err(err).Msg(err.Error())
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSONPretty(http.StatusInternalServerError,
 			models.JSONError{Error: models.JSONErrorInfo{Code: 500, Message: err.Error()}}, "  ")
 	}
@@ -293,7 +293,7 @@ func (api *RestAPI) PostBotCmdScrape(c echo.Context) error {
 
     err := api.bs.PostBotCmdScrape(botName)
 	if err != nil {
-        api.logger.Error().Err(err).Msg(err.Error())
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSON(http.StatusInternalServerError,
 			models.JSONError{Error: models.JSONErrorInfo{Code: 500, Message: err.Error()}})
 	}

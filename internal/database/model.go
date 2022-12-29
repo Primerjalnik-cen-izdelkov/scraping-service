@@ -35,6 +35,7 @@ func (db Database) CreateTable(tableName string) error {
 func (db Database) GetBotLogs(botName string, qm map[string]string) ([]models.FileLog, error) {
 	logs, err := db.dber.GetBotLogs(botName, qm)
 	if err != nil {
+        db.logger.Error().Err(err).Msg(err.Error())
 		return nil, err
 	}
 
@@ -44,6 +45,7 @@ func (db Database) GetBotLogs(botName string, qm map[string]string) ([]models.Fi
 func (db Database) GetFileLogs(botName string, unixTime int64) (*models.FileLog, error) {
 	file, err := db.dber.GetFileLogs(botName, unixTime)
 	if err != nil {
+        db.logger.Error().Err(err).Msg(err.Error())
 		return nil, err
 	}
 
@@ -56,6 +58,7 @@ func (db Database) GetFileLogs(botName string, unixTime int64) (*models.FileLog,
 func (db Database) UpdateBot(botName string) error {
 	err := db.dber.UpdateBot(botName)
 	if err != nil {
+        db.logger.Error().Err(err).Msg(err.Error())
 		return err
 	}
 
@@ -66,6 +69,7 @@ func (db Database) UpdateBot(botName string) error {
 func (db Database) GetBot(botName string, qp url.Values) (*models.Bot, error) {
 	bot, err := db.dber.GetBot(botName, qp)
 	if err != nil {
+        db.logger.Error().Err(err).Msg(err.Error())
 		return nil, db.handleDBErrors(err)
 	}
 
@@ -114,6 +118,7 @@ func (db Database) handleDBErrors(err error) error {
 func (db Database) GetFiles(qp url.Values) ([]models.File, error) {
     files, err := db.dber.GetFiles(qp)
     if err != nil {
+        db.logger.Error().Err(err).Msg(err.Error())
         return nil, db.handleDBErrors(err)
     }
 
@@ -133,6 +138,7 @@ func (db Database) GetFiles(qp url.Values) ([]models.File, error) {
 func (db Database) GetLogs(qp url.Values) ([]models.FileLog, error) {
     logs, err := db.dber.GetLogs(qp)
     if err != nil {
+        db.logger.Error().Err(err).Msg(err.Error())
         return nil, db.handleDBErrors(err)
     }
 

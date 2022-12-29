@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
     "path"
-    "context"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -44,39 +43,18 @@ func Ping(c echo.Context) error {
 	return c.String(http.StatusOK, os.Getenv("VERSION"))
 }
 
-var (
-	HeaderCorrelationID = "X-Correlation-Id"
-	KeyCorrelationID    = "correlationid"
-)
-
-func CorrelationIdMiddleware() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			req := c.Request()
-			id := req.Header.Get(HeaderCorrelationID)
-			if id == "" {
-                id = xid.New().String()
-			}
-			c.Response().Header().Set(HeaderCorrelationID, id)
-			newreq := req.WithContext(context.WithValue(req.Context(), KeyCorrelationID, id))
-			c.SetRequest(newreq)
-			return next(c)
-		}
-	}
-}
-
 // TODO(miha): Put more things into ENV variables
 // TODO(miha): Create auth mechanism (check for echos framework website if they
 // already have something) and use elephant postgres database to store
 // credentials.
 // DONE(miha): Add correlation IDs
-// TODO(miha): Add healthchecks in docker (and kubernetes?)
+// TODO(miha): Add healthchecks in kubernetes
 
 // TODO(miha): Logging
 //  - change gelfs source code so zerolog don't short write
 //  - check if graylog is online with ping
 //  - create new zerolog multiple logger for: stdout, file, graylog
-    //  - add logs through service
+//  - add logs through service
 //  - setup echo to use zerolog
 //  - add correlation ID (rs/xid package)
     //  - add lumberjack package for rotating logs
@@ -131,26 +109,60 @@ func main() {
     _, _, _, _, _ = gelfWriter, pinger, logFile, multi, logger
 
 	e := echo.New()
-	//e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
     e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
         AllowOrigins: []string{"http://localhost:5173"},
         // TODO(miha): What are allowHeaders? dig into this...
         AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
     }))
     // NOTE(miha): Setup echo to use zerolog.
+    /*
+DefaultLoggerConfig = LoggerConfig{
+  Skipper: DefaultSkipper,
+  Format: `{"time":"${time_rfc3339_nano}","id":"${id}","remote_ip":"${remote_ip}",` +
+    `"host":"${host}","method":"${method}","uri":"${uri}","user_agent":"${user_agent}",` +
+    `"status":${status},"error":"${error}","latency":${latency},"latency_human":"${latency_human}"` +
+    `,"bytes_in":${bytes_in},"bytes_out":${bytes_out}}` + "\n",
+  CustomTimeFormat: "2006-01-02 15:04:05.00000",
+}
+    */
+    e.Use(middleware.RequestIDWithConfig(middleware.RequestIDConfig{
+        Generator: func() string {
+            return xid.New().String()
+        },
+        TargetHeader: "X-Request-Id",
+    }))
     e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-        LogURI:    true,
-        LogStatus: true,
+        LogURI:           true,
+        LogStatus:        true,
+        LogRemoteIP:      true,
+        LogHost:          true,
+        LogMethod:        true,
+        LogUserAgent:     true,
+        LogLatency:       true,
+        LogRequestID:     true,
+        LogError:         true,
+        LogProtocol:      true,
+        LogURIPath:       true,
+        LogRoutePath:     true,
+        LogReferer:       true,
+        LogContentLength: true,
+        LogResponseSize:  true,
         LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
             logger.Info().
-                Str("URI", v.URI).
+                Str("id", v.RequestID).
+                Str("remote_ip", v.RemoteIP).
+                Str("host", v.Host).
+                Str("method", v.Method).
+                Str("uri", v.URI).
+                Str("user_agent", v.UserAgent).
                 Int("status", v.Status).
-                Msg("request")
+                Str("latency", v.Latency.String()).
+                Msg("logging middleware")
 
             return nil
         },
     }))
-    e.Use(CorrelationIdMiddleware())
 
     // NOTE(miha): Setup prometheus metrics.
     p := prometheus.NewPrometheus("echo", nil)
@@ -161,7 +173,7 @@ func main() {
 
 	fmt.Println("Scraping service started, running on version: ", os.Getenv("VERSION"))
 
-	mongoDB, err := database.CreateDatabase("MongoDB")
+	mongoDB, err := database.CreateDatabase("MongoDB", &logger)
 	if err != nil {
 		fmt.Println("mongoErr: ", err)
 	}
@@ -169,8 +181,8 @@ func main() {
 	if err != nil {
 		fmt.Println("mongoErr ping: ", err)
 	}
-	bs := service.CreateBotService(mongoDB)
-	rest := rest.CreateRestAPI(bs, &logger)
+	bs := service.CreateBotService(mongoDB, &logger)
+	rest := rest.CreateRestAPI(bs)
 
 	/* NOTE(miha): How to check if Boter interface is implemented.
 	var pp interface{} = bs
