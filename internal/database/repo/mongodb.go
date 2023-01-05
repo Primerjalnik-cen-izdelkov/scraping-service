@@ -262,6 +262,7 @@ func (db MongoDB) GetFiles(qp url.Values) ([]models.File, error) {
         Limit  int         `qs:"limit,nil"`
         Sort   []string    `qs:"sort,nil"`
         Field  []string    `qs:"field,nil"`
+        FileName []string  `qs:"file_name,nil"`
     }
     var q Query
     err := common.CustomUnmarshaler.UnmarshalValues(&q, qp)
@@ -276,6 +277,7 @@ func (db MongoDB) GetFiles(qp url.Values) ([]models.File, error) {
         return nil, ErrObjectIDConversion
     }
     u = common.QueryStringSlice(u, q.Name, "bot_name")
+    u = common.QueryStringSlice(u, q.FileName, "file_name")
     u = common.QuerySameDay(u, q.Date, "date")
     u = common.QueryDateGreater(u, q.DateGt, "date")
     u = common.QueryDateLess(u, q.DateLt, "date")

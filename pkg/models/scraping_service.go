@@ -58,3 +58,9 @@ type FileLog struct {
 	ItemScrapedCount                 int                `json:"item_scraped_count,omitempty" bson:"item_scraped_count,omitempty"`
 	//RequestDepthMax                  int                `json:"request_depth_max,omitempty" bson:"request_depth_max,omitempty"`
 }
+
+type User struct {
+    Id           int    `json:"id"`
+    Name         string `json:"name"`
+    PasswordHash []byte `json:"password_hash"`
+}

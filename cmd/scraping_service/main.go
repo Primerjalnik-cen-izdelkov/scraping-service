@@ -9,11 +9,18 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-    "github.com/go-ping/ping"
-    "github.com/rs/zerolog"
-    "gopkg.in/Graylog2/go-gelf.v1/gelf"
-    "github.com/rs/xid"
-    "github.com/labstack/echo-contrib/prometheus"
+  "github.com/eaigner/jet"
+  "github.com/lib/pq"
+
+	echojwt "github.com/labstack/echo-jwt/v4"
+	"github.com/golang-jwt/jwt/v4"
+
+  "github.com/go-ping/ping"
+  "github.com/rs/zerolog"
+  "gopkg.in/Graylog2/go-gelf.v1/gelf"
+  "github.com/rs/xid"
+  "github.com/labstack/echo-contrib/prometheus"
+
 
 	swaggerDocs "scraping_service/docs"
 	"scraping_service/internal/api/rest"
@@ -41,6 +48,11 @@ import (
 // @Router /ping [get]
 func Ping(c echo.Context) error {
 	return c.String(http.StatusOK, os.Getenv("VERSION"))
+}
+
+type jwtClaims struct {
+    Name string `json:"name"`
+    jwt.RegisteredClaims
 }
 
 // TODO(miha): Put more things into ENV variables
@@ -181,8 +193,41 @@ DefaultLoggerConfig = LoggerConfig{
 	if err != nil {
 		fmt.Println("mongoErr ping: ", err)
 	}
+
+  authDB, err := database.CreateAuthDatabase("AuthPostgresDB")
+	if err != nil {
+		fmt.Println("postgres auth err: ", err)
+	}
+	bs := service.CreateBotService(mongoDB, authDB)
 	bs := service.CreateBotService(mongoDB, &logger)
+
 	rest := rest.CreateRestAPI(bs)
+
+    // NOTE(miha): Postgres database schema:
+    // table 'users':
+    //      id INT autoincrement
+    //      name VARCHAR(64)
+    //      password_hash VARCHAR(60)
+    // NOTE(miha): Add psql connection for the user auth.
+    pgUrl, err := pq.ParseURL("postgres://jxbacwyb:vtzIi6XdAepqt8miPVKnK4wOY1bMFhrb@snuffleupagus.db.elephantsql.com/jxbacwyb")
+    if err != nil {
+        fmt.Println("postgres parse url err: ", err)
+    }
+    pgDB, err := jet.Open("postgres", pgUrl)
+    if err != nil {
+        fmt.Println("postgres jet open err: ", err)
+    }
+    var users []*struct {
+        Id  int
+        Name string
+        PasswordHash []byte
+    }
+    err = pgDB.Query("SELECT * FROM users").Rows(&users)
+    if err != nil {
+    }
+    for _, user := range users {
+        fmt.Printf("id: %d, name: %s, hash: %s", user.Id, user.Name, user.PasswordHash)
+    }
 
 	/* NOTE(miha): How to check if Boter interface is implemented.
 	var pp interface{} = bs
@@ -209,6 +254,20 @@ DefaultLoggerConfig = LoggerConfig{
 	e.GET("/ping", Ping)
 
 	versionGroup := e.Group("/v1")
+    versionGroup.POST("/login", rest.Login)
+
+    jwtConfig := echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(jwtClaims)
+		},
+        ErrorHandler: func(c echo.Context, err error) error {
+            fmt.Println("error handler:", err)
+            return err
+        },
+		SigningKey: []byte("secret"),
+	}
+    _ = jwtConfig
+    //versionGroup.Use(echojwt.WithConfig(jwtConfig))
 
 	// /bots/
 	botsGroup := versionGroup.Group("/bots")

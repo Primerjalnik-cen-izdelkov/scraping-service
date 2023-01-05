@@ -20,6 +20,172 @@ func CreateRestAPI(service *service.BotService) *RestAPI {
     return res
 }
 
+/*
+func (api *RestAPI) GetAllBots(c echo.Context) error {
+	bots, err := api.bs.GetAllBots()
+	if err != nil {
+		return c.JSONPretty(http.StatusInternalServerError, models.JSONError{
+			Error: models.JSONErrorInfo{
+				Code:    http.StatusInternalServerError,
+				Message: err.Error()},
+		}, "  ")
+	}
+
+	return c.JSONPretty(http.StatusOK, bots, "  ")
+}
+*/
+
+/*
+func (api *RestAPI) ScrapeAllBots(c echo.Context) error {
+	err := api.bs.ScrapeAllBots()
+	fmt.Println("scrapeall err:", err)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError,
+			models.JSONError{Error: models.JSONErrorInfo{Code: 500, Message: err.Error()}})
+	}
+
+	return c.JSONPretty(http.StatusOK, models.JSONData{Data: "command send"}, "  ")
+}
+*/
+
+/*
+func (api *RestAPI) AllBotsStatus(c echo.Context) error {
+	return nil
+}
+*/
+
+/*
+func (api *RestAPI) ScrapeBot(c echo.Context) error {
+	// PATH params
+	botName := c.Param("bot_name")
+
+	err := api.bs.ScrapeBot(botName)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError,
+			models.JSONError{Error: models.JSONErrorInfo{Code: 500, Message: err.Error()}})
+	}
+
+	return c.JSONPretty(http.StatusOK, models.JSONData{Data: "command send"}, "  ")
+}
+*/
+
+/*
+func (api *RestAPI) BotStatus(c echo.Context) error {
+	return nil
+}
+*/
+
+/*
+func (api *RestAPI) GetAllBotFiles(c echo.Context) error {
+	// PATH params
+	botName := c.Param("bot_name")
+
+	files, err := api.bs.GetBotFileNames(botName)
+	if err != nil {
+		return c.JSONPretty(http.StatusInternalServerError,
+			models.JSONError{Error: models.JSONErrorInfo{Code: 404, Message: "Bot files err"}},
+			"  ")
+	}
+
+	return c.JSONPretty(http.StatusOK, models.JSONData{Data: files}, "  ")
+
+}
+*/
+
+/*
+func (api *RestAPI) GetBotFile(c echo.Context) error {
+	// PATH params
+	botName := c.Param("bot_name")
+	fileName := c.Param("file")
+
+	return c.Redirect(http.StatusPermanentRedirect, fmt.Sprintf("/data/%s/%s", botName, fileName))
+}
+*/
+
+/*
+func (api *RestAPI) GetFileStats(c echo.Context) error {
+	// PATH params
+	botName := c.Param("bot_name")
+	fileName := c.Param("file")
+
+	// QUERY params
+	fields := c.QueryParam("fields")
+	ignoreFields := c.QueryParam("ignore_fields")
+
+	fmt.Println("QuerryParas: ", fields, ignoreFields)
+
+	file, err := api.bs.GetFileStats(botName, fileName)
+	if err != nil {
+		fmt.Println(err)
+		// TODO
+		return c.JSONPretty(http.StatusInternalServerError,
+			models.JSONError{Error: models.JSONErrorInfo{Code: 404, Message: "Bot files err"}},
+			"  ")
+	}
+
+	return c.JSONPretty(http.StatusOK, models.JSONData{Data: file}, "  ")
+}
+*/
+
+/*
+func (api *RestAPI) CmdStatus(c echo.Context) error {
+	// PATH params
+	botName := c.Param("bot_name")
+
+	api.bs.CmdStatus(botName)
+
+	return c.JSONPretty(http.StatusOK, models.JSONData{Data: "hehe"}, "  ")
+}
+*/
+
+//////////////////////////////////////////////////////
+// NOTE(miha): Here is the beggingig of our routing //
+//////////////////////////////////////////////////////
+
+func (api *RestAPI) Login(c echo.Context) error {
+    type User struct {
+        Name     string `json:"name"`
+        Password string `json:"password"`
+    }
+
+    var u User
+
+    // NOTE(miha): Bind/parse json body into variable 'u' of type 'User'.
+    if err := c.Bind(&u); err != nil {
+        return c.String(http.StatusBadRequest, "Error with parsing body.")
+    }
+
+    // TODO(miha): Bot service must have function Login that calls postgres database.
+    /*
+    var users []*struct {
+        Id  int
+        Name string
+        PasswordHash []byte
+    }
+    err = api.bs.AuthDb.Query("SELECT * FROM users").Rows(&users)
+    if err != nil {
+    }
+    for _, user := range users {
+        fmt.Printf("id: %d, name: %s, hash: %s", user.Id, user.Name, user.PasswordHash)
+    }
+    */
+
+    jwt, err := api.bs.Login(u.Name, u.Password)
+    if err != nil {
+
+    }
+    _ = jwt
+
+    fmt.Println("user:", u, err)
+
+    //return c.String(http.StatusOK, fmt.Sprintf("we got %s %s", u.Name, u.Password))
+    	return c.JSON(http.StatusOK, echo.Map{
+		"token": jwt,
+	})
+}
+
+
+// TODO(miha): Accept query params
 // @Summary Returns array of all avaiable bots.
 // @Description We are returning list of type '[]*models.Bot' for all the bots we have created.
 // @ID get_bots 
