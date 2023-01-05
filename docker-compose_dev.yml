@@ -17,17 +17,23 @@ services:
     container_name: scraping_service
     ports:
       - "8080:1323"
+    volumes:
+      - scraping_service_logs_vol:/logs
     restart: unless-stopped
     networks:
       - scraping_service_net
     environment:
            MONGODB_URI: mongodb://mongo_server:27017
            VERSION: 0.0.4
+           GRAYLOG_ADDR: localhost:5555
+           LOG_FILE: scraping_service.log
+           LOG_LEVEL: 1
     depends_on:
       - "mongo_server"
 
 volumes:
   scraping_service_mongo_server_vol:
+  scraping_service_logs_vol:
 
 networks:
   scraping_service_net:

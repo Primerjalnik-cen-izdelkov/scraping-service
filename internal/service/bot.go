@@ -12,6 +12,7 @@ import (
 	"scraping_service/pkg/common"
 	"scraping_service/pkg/models"
 	"strings"
+    "github.com/rs/zerolog"
 )
 
 // Errors that can occur in the bot service.
@@ -37,11 +38,12 @@ type BotService struct {
 	db     *database.Database
     // Map for holding bot processes if any exists.
 	botPID map[string]*exec.Cmd
+    Logger *zerolog.Logger
 }
 
 // Returns new 'BotService' struct with the given database 'd' connection.
-func CreateBotService(d *database.Database) *BotService {
-	return &BotService{db: d, botPID: make(map[string]*exec.Cmd)}
+func CreateBotService(d *database.Database, logger *zerolog.Logger) *BotService {
+    return &BotService{db: d, botPID: make(map[string]*exec.Cmd), Logger: logger}
 }
 
 // Function 'BotNames' returns array '[]string' of all avaiable bot names.
@@ -59,12 +61,14 @@ func (bs *BotService) BotNames() ([]string, error) {
     // NOTE(miha): Open directory with python bots.
 	dir, err := os.Open("./scrapy_grocery_stores/scrapy_grocery_stores/spiders")
 	if err != nil {
+        bs.Logger.Error().Err(err).Msg(err.Error())
 		return nil, ErrDirectoryNotFound
 	}
 
     // NOTE(miha): Read all the filenames in the directory 'dir'. 
 	files, err := dir.Readdirnames(0)
 	if err != nil {
+        bs.Logger.Error().Err(err).Msg(err.Error())
 		return nil, ErrDirectoryIsEmpty
 	}
 
@@ -102,6 +106,7 @@ func (bs *BotService) GetBots(qp url.Values) ([]*models.Bot, error) {
     // NOTE(miha): Get all bots.
     botNames, err := bs.BotNames()
     if err != nil {
+        bs.Logger.Error().Err(err).Msg(err.Error())
         return nil, err
     }
 
@@ -116,6 +121,7 @@ func (bs *BotService) GetBots(qp url.Values) ([]*models.Bot, error) {
         // TODO(miha): We cannot have qp for just one bot (can't filter by name with qp)...
         bot, err := bs.db.GetBot(name, qp)
         if err != nil {
+            bs.Logger.Error().Err(err).Msg(err.Error())
             return nil, err
         }
 
@@ -165,12 +171,14 @@ func (bs *BotService) PostCmdScrape() error {
     // NOTE(miha): Get all the bot names.
 	bots, err := bs.BotNames()
 	if err != nil {
+        bs.Logger.Error().Err(err).Msg(err.Error())
 		return err
 	}
 
 	// NOTE(miha): Check if python is installed on the system.
 	_, err = exec.LookPath("python")
 	if err != nil {
+        bs.Logger.Error().Err(err).Msg(err.Error())
 		return ErrNoPython
 	}
 
@@ -205,6 +213,7 @@ func (bs *BotService) PostCmdScrape() error {
 
 		err = cmd.Start()
 		if err != nil {
+            bs.Logger.Error().Err(err).Msg(err.Error())
 			return ErrCantStartBot
 		}
 
@@ -214,12 +223,12 @@ func (bs *BotService) PostCmdScrape() error {
 		go func(bot string) {
 			err := cmd.Wait()
 			if err != nil {
-                // TODO
+                bs.Logger.Error().Err(err).Msg(err.Error())
 			}
 
             err = bs.db.UpdateBot(bot)
 			if err != nil {
-                // TODO
+                bs.Logger.Error().Err(err).Msg(err.Error())
 			}
             delete(bs.botPID, bot)
 		}(bot)
@@ -236,6 +245,7 @@ func (bs *BotService) PostCmdStop() error {
     for _, v := range bs.botPID {
         err := v.Process.Kill()
         if err != nil {
+            bs.Logger.Error().Err(err).Msg(err.Error())
             return ErrCantKillBot
         }
     }
@@ -249,9 +259,11 @@ func (bs *BotService) GetBotFiles() error {
 func (bs *BotService) GetBotLogs(botName string, qm map[string]string) ([]models.FileLog, error) {
 	logs, err := bs.db.GetBotLogs(botName, qm)
 	if err != nil {
+        bs.Logger.Error().Err(err).Msg(err.Error())
 		return nil, err
 	}
 	if logs == nil {
+        bs.Logger.Error().Err(err).Msg(err.Error())
 		return nil, ErrFilesEmpty
 	}
 
@@ -262,6 +274,7 @@ func (bs *BotService) ScrapeBot(botName string) error {
 	if runtime.GOOS == "windows" {
 		_, err := exec.Command("cmd", "/C", "python", "-V").Output()
 		if err != nil {
+            bs.Logger.Error().Err(err).Msg(err.Error())
 			return err
 		}
 
@@ -269,6 +282,7 @@ func (bs *BotService) ScrapeBot(botName string) error {
 		cmd.Dir = "./scrapy_grocery_stores"
 		_, err = cmd.Output()
 		if err != nil {
+            bs.Logger.Error().Err(err).Msg(err.Error())
 			// TODO(miha): We can't handle errors - we just need to
 			// check back 5min after bot run to see if we scraped all
 			// data.
@@ -300,7 +314,9 @@ func (bs *BotService) ScrapeBot(botName string) error {
 		*/
 
 	} else {
-		return errors.New("Linux ScrapeAll() is not suported yet")
+        err := errors.New("Linux ScrapeAll() is not suported yet")
+        bs.Logger.Error().Err(err).Msg(err.Error())
+		return err
 	}
 
 	return nil
@@ -358,11 +374,13 @@ func (bs *BotService) GetBotFiles(files []string) (string, error) {
 func (bs *BotService) GetBotFileNames(botName string) ([]string, error) {
 	dir, err := os.Open(fmt.Sprintf("./scrapy_grocery_stores/data/%s/", botName))
 	if err != nil {
+        bs.Logger.Error().Err(err).Msg(err.Error())
 		return nil, ErrDirectoryNotFound
 	}
 
 	fileName, err := dir.Readdirnames(0)
 	if err != nil {
+        bs.Logger.Error().Err(err).Msg(err.Error())
 		return nil, ErrDirectoryIsEmpty
 	}
 
@@ -392,6 +410,7 @@ func (bs *BotService) PostBotCmdScrape(botName string) error {
 	// NOTE(miha): Check if python is installed on the system.
     _, err := exec.LookPath("python")
 	if err != nil {
+        bs.Logger.Error().Err(err).Msg(err.Error())
 		return ErrNoPython
 	}
 
@@ -408,6 +427,7 @@ func (bs *BotService) PostBotCmdScrape(botName string) error {
 
     err = cmd.Start()
     if err != nil {
+        bs.Logger.Error().Err(err).Msg(err.Error())
         return ErrCantStartBot
     }
 
@@ -416,11 +436,11 @@ func (bs *BotService) PostBotCmdScrape(botName string) error {
     go func(bot string) {
         err := cmd.Wait()
         if err != nil {
-            // TODO
+            bs.Logger.Error().Err(err).Msg(err.Error())
         }
         err = bs.db.UpdateBot(bot)
         if err != nil {
-            // TODO
+            bs.Logger.Error().Err(err).Msg(err.Error())
         }
         delete(bs.botPID, botName)
     }(botName)
@@ -436,6 +456,7 @@ func (bs *BotService) BotCmdStop(botName string) error {
     if process, ok := bs.botPID[botName]; ok {
         err := process.Process.Kill()
         if err != nil {
+            bs.Logger.Error().Err(err).Msg(err.Error())
             return ErrCantKillBot
         }
     }

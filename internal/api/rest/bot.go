@@ -7,139 +7,19 @@ import (
 	"scraping_service/pkg/models"
 
 	"github.com/labstack/echo/v4"
+    "github.com/rs/zerolog"
 )
 
 type RestAPI struct {
 	bs *service.BotService
+    logger *zerolog.Logger
 }
 
 func CreateRestAPI(service *service.BotService) *RestAPI {
-	return &RestAPI{bs: service}
+    res := &RestAPI{bs: service}
+    return res
 }
 
-/*
-func (api *RestAPI) GetAllBots(c echo.Context) error {
-	bots, err := api.bs.GetAllBots()
-	if err != nil {
-		return c.JSONPretty(http.StatusInternalServerError, models.JSONError{
-			Error: models.JSONErrorInfo{
-				Code:    http.StatusInternalServerError,
-				Message: err.Error()},
-		}, "  ")
-	}
-
-	return c.JSONPretty(http.StatusOK, bots, "  ")
-}
-*/
-
-/*
-func (api *RestAPI) ScrapeAllBots(c echo.Context) error {
-	err := api.bs.ScrapeAllBots()
-	fmt.Println("scrapeall err:", err)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError,
-			models.JSONError{Error: models.JSONErrorInfo{Code: 500, Message: err.Error()}})
-	}
-
-	return c.JSONPretty(http.StatusOK, models.JSONData{Data: "command send"}, "  ")
-}
-*/
-
-/*
-func (api *RestAPI) AllBotsStatus(c echo.Context) error {
-	return nil
-}
-*/
-
-/*
-func (api *RestAPI) ScrapeBot(c echo.Context) error {
-	// PATH params
-	botName := c.Param("bot_name")
-
-	err := api.bs.ScrapeBot(botName)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError,
-			models.JSONError{Error: models.JSONErrorInfo{Code: 500, Message: err.Error()}})
-	}
-
-	return c.JSONPretty(http.StatusOK, models.JSONData{Data: "command send"}, "  ")
-}
-*/
-
-/*
-func (api *RestAPI) BotStatus(c echo.Context) error {
-	return nil
-}
-*/
-
-/*
-func (api *RestAPI) GetAllBotFiles(c echo.Context) error {
-	// PATH params
-	botName := c.Param("bot_name")
-
-	files, err := api.bs.GetBotFileNames(botName)
-	if err != nil {
-		return c.JSONPretty(http.StatusInternalServerError,
-			models.JSONError{Error: models.JSONErrorInfo{Code: 404, Message: "Bot files err"}},
-			"  ")
-	}
-
-	return c.JSONPretty(http.StatusOK, models.JSONData{Data: files}, "  ")
-
-}
-*/
-
-/*
-func (api *RestAPI) GetBotFile(c echo.Context) error {
-	// PATH params
-	botName := c.Param("bot_name")
-	fileName := c.Param("file")
-
-	return c.Redirect(http.StatusPermanentRedirect, fmt.Sprintf("/data/%s/%s", botName, fileName))
-}
-*/
-
-/*
-func (api *RestAPI) GetFileStats(c echo.Context) error {
-	// PATH params
-	botName := c.Param("bot_name")
-	fileName := c.Param("file")
-
-	// QUERY params
-	fields := c.QueryParam("fields")
-	ignoreFields := c.QueryParam("ignore_fields")
-
-	fmt.Println("QuerryParas: ", fields, ignoreFields)
-
-	file, err := api.bs.GetFileStats(botName, fileName)
-	if err != nil {
-		fmt.Println(err)
-		// TODO
-		return c.JSONPretty(http.StatusInternalServerError,
-			models.JSONError{Error: models.JSONErrorInfo{Code: 404, Message: "Bot files err"}},
-			"  ")
-	}
-
-	return c.JSONPretty(http.StatusOK, models.JSONData{Data: file}, "  ")
-}
-*/
-
-/*
-func (api *RestAPI) CmdStatus(c echo.Context) error {
-	// PATH params
-	botName := c.Param("bot_name")
-
-	api.bs.CmdStatus(botName)
-
-	return c.JSONPretty(http.StatusOK, models.JSONData{Data: "hehe"}, "  ")
-}
-*/
-
-//////////////////////////////////////////////////////
-// NOTE(miha): Here is the beggingig of our routing //
-//////////////////////////////////////////////////////
-
-// TODO(miha): Accept query params
 // @Summary Returns array of all avaiable bots.
 // @Description We are returning list of type '[]*models.Bot' for all the bots we have created.
 // @ID get_bots 
@@ -153,6 +33,7 @@ func (api *RestAPI) GetBots(c echo.Context) error {
 
 	bots, err := api.bs.GetBots(qp)
 	if err != nil {
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSONPretty(http.StatusInternalServerError, models.JSONError{
 			Error: models.JSONErrorInfo{
 				Code:    http.StatusInternalServerError,
@@ -190,6 +71,7 @@ func (api *RestAPI) GetFiles(c echo.Context) error {
     
 	files, err := api.bs.GetFiles(qp)
 	if err != nil {
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSONPretty(http.StatusInternalServerError,
             models.JSONError{
                 Error: models.JSONErrorInfo{
@@ -240,6 +122,7 @@ func (api *RestAPI) GetLogs(c echo.Context) error {
 
 	logs, err := api.bs.GetLogs(qp)
 	if err != nil {
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSONPretty(http.StatusInternalServerError,
             models.JSONError{
                 Error: models.JSONErrorInfo{
@@ -295,6 +178,7 @@ func (api *RestAPI) GetCmds(c echo.Context) error {
 func (api *RestAPI) PostCmdScrape(c echo.Context) error {
 	err := api.bs.PostCmdScrape()
 	if err != nil {
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSONPretty(http.StatusInternalServerError,
 			models.JSONError{Error: models.JSONErrorInfo{Code: 500, Message: err.Error()}}, "  ")
 	}
@@ -312,6 +196,7 @@ func (api *RestAPI) PostCmdScrape(c echo.Context) error {
 func (api *RestAPI) PostCmdStop(c echo.Context) error {
 	err := api.bs.PostCmdStop()
 	if err != nil {
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSONPretty(http.StatusInternalServerError,
 			models.JSONError{Error: models.JSONErrorInfo{Code: 500, Message: err.Error()}}, "  ")
 	}
@@ -358,7 +243,6 @@ func (api *RestAPI) GetBotFiles(c echo.Context) error {
     return api.GetFiles(c)
 }
 
-// TODO(miha): This function need to return bot logs from the scrapes
 func (api *RestAPI) GetBotLogs(c echo.Context) error {
 	// PATH params
 	botName := c.Param("bot_name")
@@ -377,16 +261,14 @@ func (api *RestAPI) GetBotLogs(c echo.Context) error {
 	qm["itemsScrapedGT"] = c.QueryParam("items_scraped.gt")
 	qm["itemsScrapedSort"] = c.QueryParam("items_scraped.sort")
 
-    fmt.Println("do we get timeLT:", qm["timeLT"], c.QueryParam("time.lt"))
-    fmt.Println("do we get fields:", qm["fields"], c.QueryParam("fields"))
+    //fmt.Println("do we get timeLT:", qm["timeLT"], c.QueryParam("time.lt"))
+    //fmt.Println("do we get fields:", qm["fields"], c.QueryParam("fields"))
 
 	logs, err := api.bs.GetBotLogs(botName, qm)
 	if err != nil {
-		fmt.Println(err)
-		// TODO
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSONPretty(http.StatusInternalServerError,
-			models.JSONError{Error: models.JSONErrorInfo{Code: 404, Message: "Bot files err"}},
-			"  ")
+			models.JSONError{Error: models.JSONErrorInfo{Code: 500, Message: err.Error()}}, "  ")
 	}
 
 	return c.JSONPretty(http.StatusOK, models.JSONData{Data: logs}, "  ")
@@ -411,6 +293,7 @@ func (api *RestAPI) PostBotCmdScrape(c echo.Context) error {
 
     err := api.bs.PostBotCmdScrape(botName)
 	if err != nil {
+        api.bs.Logger.Error().Err(err).Msg(err.Error())
 		return c.JSON(http.StatusInternalServerError,
 			models.JSONError{Error: models.JSONErrorInfo{Code: 500, Message: err.Error()}})
 	}

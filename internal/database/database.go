@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"scraping_service/internal/database/repo"
+    "github.com/rs/zerolog"
 )
 
 var ErrNotDatabaser = errors.New("Struct is not a Databaser")
@@ -10,15 +11,16 @@ var ErrNotDatabaser = errors.New("Struct is not a Databaser")
 type Database struct {
     name string
 	dber Databaser
+    logger *zerolog.Logger
 }
 
-func CreateDatabase(dbName string) (*Database, error) {
+func CreateDatabase(dbName string, logger *zerolog.Logger) (*Database, error) {
 	switch dbName {
 	case "MongoDB":
 		{
 			db := &repo.MongoDB{}
 			if IsDatabaser(db) {
-                return &Database{name: "MongoDB", dber: repo.CreateMongoDB()}, nil
+                return &Database{name: "MongoDB", dber: repo.CreateMongoDB(), logger: logger}, nil
 			} else {
 				return nil, ErrNotDatabaser
 			}
