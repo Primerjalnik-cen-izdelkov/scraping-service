@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+    "time"
 	//"path"
     "net/url"
 	"runtime"
@@ -12,19 +13,22 @@ import (
 	"scraping_service/pkg/common"
 	"scraping_service/pkg/models"
 	"strings"
+    "golang.org/x/crypto/bcrypt"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // Errors that can occur in the bot service.
 var (
-	ErrDirectoryNotFound = errors.New("Bot directory not found")
-	ErrDirectoryIsEmpty  = errors.New("Bot directory is empty")
-	ErrBotBadFilename    = errors.New("Bot filename does not contain a dot")
-	ErrFilesEmpty        = errors.New("Returned files are empty")
-    ErrBotAlreadyRunning = errors.New("Bot is alredy running")
-    ErrBotIsNotRunning   = errors.New("Bot is not running")
-    ErrNoPython          = errors.New("Python couldn't be found on the system")
-    ErrCantStartBot      = errors.New("Bot process can't be started")
-    ErrCantKillBot       = errors.New("Bot process can't be killed")
+	ErrDirectoryNotFound  = errors.New("Bot directory not found")
+	ErrDirectoryIsEmpty   = errors.New("Bot directory is empty")
+	ErrBotBadFilename     = errors.New("Bot filename does not contain a dot")
+	ErrFilesEmpty         = errors.New("Returned files are empty")
+    ErrBotAlreadyRunning  = errors.New("Bot is alredy running")
+    ErrBotIsNotRunning    = errors.New("Bot is not running")
+    ErrNoPython           = errors.New("Python couldn't be found on the system")
+    ErrCantStartBot       = errors.New("Bot process can't be started")
+    ErrCantKillBot        = errors.New("Bot process can't be killed")
+    ErrInvalidCredentials = errors.New("Invalid crredentials were given")
 )
 
 // 'BotService' struct holds information about database connection and running
@@ -34,14 +38,55 @@ var (
 // currently running - value contains information about the process.
 type BotService struct {
     // Database connection
-	db     *database.Database
+	db         *database.Database
+	authDb     *database.AuthDatabase
     // Map for holding bot processes if any exists.
 	botPID map[string]*exec.Cmd
 }
 
+type jwtClaims struct {
+    Name string `json:"name"`
+    jwt.RegisteredClaims
+}
+
 // Returns new 'BotService' struct with the given database 'd' connection.
-func CreateBotService(d *database.Database) *BotService {
-	return &BotService{db: d, botPID: make(map[string]*exec.Cmd)}
+func CreateBotService(d *database.Database, ad *database.AuthDatabase) *BotService {
+    return &BotService{db: d, authDb: ad, botPID: make(map[string]*exec.Cmd)}
+}
+
+func (bs *BotService) Login(userName, pass string) (string, error) {
+    // NOTE(miha): Get user with name 'userName' from the database, so we can
+    // compare hashed passwords.
+    user, err := bs.authDb.GetUser(userName)
+    if err != nil {
+    }
+    _ = user
+
+    // NOTE(miha): Compare passwords
+	err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(pass))
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return "", ErrInvalidCredentials
+	} else if err != nil {
+		return "", err
+	}
+
+    // NOTE(miha): Generate JWT claim
+    claims := &jwtClaims{
+        userName,
+        jwt.RegisteredClaims{
+            ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
+        },
+    }
+
+    // NOTE(miha): Generate JWT token
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+    t, err := token.SignedString([]byte("secret"))
+	if err != nil {
+		return "", err
+	}
+
+    return t, nil
 }
 
 // Function 'BotNames' returns array '[]string' of all avaiable bot names.

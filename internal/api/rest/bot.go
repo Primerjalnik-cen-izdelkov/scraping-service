@@ -139,6 +139,49 @@ func (api *RestAPI) CmdStatus(c echo.Context) error {
 // NOTE(miha): Here is the beggingig of our routing //
 //////////////////////////////////////////////////////
 
+func (api *RestAPI) Login(c echo.Context) error {
+    type User struct {
+        Name     string `json:"name"`
+        Password string `json:"password"`
+    }
+
+    var u User
+
+    // NOTE(miha): Bind/parse json body into variable 'u' of type 'User'.
+    if err := c.Bind(&u); err != nil {
+        return c.String(http.StatusBadRequest, "Error with parsing body.")
+    }
+
+    // TODO(miha): Bot service must have function Login that calls postgres database.
+    /*
+    var users []*struct {
+        Id  int
+        Name string
+        PasswordHash []byte
+    }
+    err = api.bs.AuthDb.Query("SELECT * FROM users").Rows(&users)
+    if err != nil {
+    }
+    for _, user := range users {
+        fmt.Printf("id: %d, name: %s, hash: %s", user.Id, user.Name, user.PasswordHash)
+    }
+    */
+
+    jwt, err := api.bs.Login(u.Name, u.Password)
+    if err != nil {
+
+    }
+    _ = jwt
+
+    fmt.Println("user:", u, err)
+
+    //return c.String(http.StatusOK, fmt.Sprintf("we got %s %s", u.Name, u.Password))
+    	return c.JSON(http.StatusOK, echo.Map{
+		"token": jwt,
+	})
+}
+
+
 // TODO(miha): Accept query params
 // @Summary Returns array of all avaiable bots.
 // @Description We are returning list of type '[]*models.Bot' for all the bots we have created.

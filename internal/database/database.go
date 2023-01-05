@@ -12,6 +12,11 @@ type Database struct {
 	dber Databaser
 }
 
+type AuthDatabase struct {
+    name string
+    dber AuthDatabaser
+}
+
 func CreateDatabase(dbName string) (*Database, error) {
 	switch dbName {
 	case "MongoDB":
@@ -26,11 +31,34 @@ func CreateDatabase(dbName string) (*Database, error) {
 	default:
 		return nil, ErrNotDatabaser
 	}
+}
 
+func CreateAuthDatabase(dbName string) (*AuthDatabase, error) {
+    switch dbName {
+    case "AuthPostgresDB":
+        {
+            db := &repo.AuthPostgresDB{}
+            if IsAuthDatabaser(db) {
+                return &AuthDatabase{name: "AuthPostgresDB", dber: repo.CreateAuthPostgresDB()}, nil
+            } else {
+                return nil, ErrNotDatabaser
+            }
+        }
+    default:
+        return nil, ErrNotDatabaser
+    }
 }
 
 func IsDatabaser(db interface{}) bool {
 	if _, ok := db.(Databaser); ok {
+		return true
+	} else {
+		return false
+	}
+}
+
+func IsAuthDatabaser(db interface{}) bool {
+	if _, ok := db.(AuthDatabaser); ok {
 		return true
 	} else {
 		return false
