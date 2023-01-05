@@ -5,6 +5,7 @@ WORKDIR /app
 # we should copy only go.mod, install dependicies and then copy the whole app
 
 RUN mkdir -p /build
+RUN mkdir -p /logs
 
 # COPY . .
 COPY go.mod .

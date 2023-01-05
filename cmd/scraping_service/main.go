@@ -4,15 +4,23 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+    "path"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-    "github.com/eaigner/jet"
-    "github.com/lib/pq"
+  "github.com/eaigner/jet"
+  "github.com/lib/pq"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/golang-jwt/jwt/v4"
+
+  "github.com/go-ping/ping"
+  "github.com/rs/zerolog"
+  "gopkg.in/Graylog2/go-gelf.v1/gelf"
+  "github.com/rs/xid"
+  "github.com/labstack/echo-contrib/prometheus"
+
 
 	swaggerDocs "scraping_service/docs"
 	"scraping_service/internal/api/rest"
@@ -51,8 +59,8 @@ type jwtClaims struct {
 // TODO(miha): Create auth mechanism (check for echos framework website if they
 // already have something) and use elephant postgres database to store
 // credentials.
-// TODO(miha): Add correlation IDs
-// TODO(miha): Add healthchecks in docker (and kubernetes?)
+// DONE(miha): Add correlation IDs
+// TODO(miha): Add healthchecks in kubernetes
 
 // TODO(miha): Logging
 //  - change gelfs source code so zerolog don't short write
@@ -60,8 +68,10 @@ type jwtClaims struct {
 //  - create new zerolog multiple logger for: stdout, file, graylog
 //  - add logs through service
 //  - setup echo to use zerolog
+//  - add correlation ID (rs/xid package)
+    //  - add lumberjack package for rotating logs
 
-// TODO(miha): Metrics
+// DONE(miha): Metrics
 //  - use prometheus
 //  - great tutorial on echos framework to combine with prometeus
 
@@ -69,20 +79,113 @@ type jwtClaims struct {
 // TODO(miha): Put this into env variable
 // @BasePath /v1
 func main() {
+    // NOTE(miha): Init logger
+    graylogAddress := os.Getenv("GRAYLOG_ADDR") 
+    // TODO(miha): ENV to set global level of graylog
+    gelfWriter, err := gelf.NewWriter(graylogAddress)
+    useGraylog := true
+
+    // NOTE(miha): Create a logging file, get name from the ENV variable
+    // LOG_FILE.
+    logFileName := os.Getenv("LOG_FILE")
+    logFile, err := os.OpenFile(
+        path.Join("/logs", logFileName),
+        os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+        0664,
+    )
+    if err != nil {
+        fmt.Printf("Cannot create file %s\n", logFileName)
+        fmt.Println(err)
+    }
+    defer logFile.Close()
+
+    // NOTE(miha): Try to ping graylog address. If it is not accessible, don't
+    // add gelfWriter as a zerolog source.
+    pinger, err := ping.NewPinger(graylogAddress)
+    if err != nil {
+        useGraylog = false
+        fmt.Printf("Logging service graylog at address %s is not avaiable.\n", graylogAddress)
+    }
+
+    // NOTE(miha): Add sources to zerolog, ie. add or ignore gelfWriter.
+    var multi zerolog.LevelWriter
+    if useGraylog {
+        multi = zerolog.MultiLevelWriter(os.Stdout, logFile, gelfWriter)
+    } else {
+        multi = zerolog.MultiLevelWriter(os.Stdout, logFile)
+    }
+
+    // NOTE(miha): Create our logger
+    logger := zerolog.New(multi).With().Timestamp().Caller().Logger()
+
+    _, _, _, _, _ = gelfWriter, pinger, logFile, multi, logger
+
 	e := echo.New()
-	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
     e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
         AllowOrigins: []string{"http://localhost:5173"},
         // TODO(miha): What are allowHeaders? dig into this...
         AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
     }))
+    // NOTE(miha): Setup echo to use zerolog.
+    /*
+DefaultLoggerConfig = LoggerConfig{
+  Skipper: DefaultSkipper,
+  Format: `{"time":"${time_rfc3339_nano}","id":"${id}","remote_ip":"${remote_ip}",` +
+    `"host":"${host}","method":"${method}","uri":"${uri}","user_agent":"${user_agent}",` +
+    `"status":${status},"error":"${error}","latency":${latency},"latency_human":"${latency_human}"` +
+    `,"bytes_in":${bytes_in},"bytes_out":${bytes_out}}` + "\n",
+  CustomTimeFormat: "2006-01-02 15:04:05.00000",
+}
+    */
+    e.Use(middleware.RequestIDWithConfig(middleware.RequestIDConfig{
+        Generator: func() string {
+            return xid.New().String()
+        },
+        TargetHeader: "X-Request-Id",
+    }))
+    e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+        LogURI:           true,
+        LogStatus:        true,
+        LogRemoteIP:      true,
+        LogHost:          true,
+        LogMethod:        true,
+        LogUserAgent:     true,
+        LogLatency:       true,
+        LogRequestID:     true,
+        LogError:         true,
+        LogProtocol:      true,
+        LogURIPath:       true,
+        LogRoutePath:     true,
+        LogReferer:       true,
+        LogContentLength: true,
+        LogResponseSize:  true,
+        LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+            logger.Info().
+                Str("id", v.RequestID).
+                Str("remote_ip", v.RemoteIP).
+                Str("host", v.Host).
+                Str("method", v.Method).
+                Str("uri", v.URI).
+                Str("user_agent", v.UserAgent).
+                Int("status", v.Status).
+                Str("latency", v.Latency.String()).
+                Msg("logging middleware")
+
+            return nil
+        },
+    }))
+
+    // NOTE(miha): Setup prometheus metrics.
+    p := prometheus.NewPrometheus("echo", nil)
+    p.Use(e)
 
     // NOTE(miha): Set swagger's version of the API.
     swaggerDocs.SwaggerInfo.Version = fmt.Sprintf("%s", os.Getenv("VERSION"))
 
 	fmt.Println("Scraping service started, running on version: ", os.Getenv("VERSION"))
 
-	mongoDB, err := database.CreateDatabase("MongoDB")
+	mongoDB, err := database.CreateDatabase("MongoDB", &logger)
 	if err != nil {
 		fmt.Println("mongoErr: ", err)
 	}
@@ -90,11 +193,14 @@ func main() {
 	if err != nil {
 		fmt.Println("mongoErr ping: ", err)
 	}
-    authDB, err := database.CreateAuthDatabase("AuthPostgresDB")
+
+  authDB, err := database.CreateAuthDatabase("AuthPostgresDB")
 	if err != nil {
 		fmt.Println("postgres auth err: ", err)
 	}
 	bs := service.CreateBotService(mongoDB, authDB)
+	bs := service.CreateBotService(mongoDB, &logger)
+
 	rest := rest.CreateRestAPI(bs)
 
     // NOTE(miha): Postgres database schema:
