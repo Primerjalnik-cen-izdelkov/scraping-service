@@ -9,18 +9,14 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-  "github.com/eaigner/jet"
-  "github.com/lib/pq"
-
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/golang-jwt/jwt/v4"
 
-  "github.com/go-ping/ping"
-  "github.com/rs/zerolog"
-  "gopkg.in/Graylog2/go-gelf.v1/gelf"
-  "github.com/rs/xid"
-  "github.com/labstack/echo-contrib/prometheus"
-
+    "github.com/go-ping/ping"
+    "github.com/rs/zerolog"
+    "gopkg.in/Graylog2/go-gelf.v1/gelf"
+    "github.com/rs/xid"
+    "github.com/labstack/echo-contrib/prometheus"
 
 	swaggerDocs "scraping_service/docs"
 	"scraping_service/internal/api/rest"
@@ -123,7 +119,7 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Recover())
     e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-        AllowOrigins: []string{"http://localhost:5173"},
+        AllowOrigins: []string{"*"}, //[]string{os.Getenv("CORS_URI")},
         // TODO(miha): What are allowHeaders? dig into this...
         AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
     }))
@@ -194,40 +190,13 @@ DefaultLoggerConfig = LoggerConfig{
 		fmt.Println("mongoErr ping: ", err)
 	}
 
-  authDB, err := database.CreateAuthDatabase("AuthPostgresDB")
+    authDB, err := database.CreateAuthDatabase("AuthPostgresDB")
 	if err != nil {
 		fmt.Println("postgres auth err: ", err)
 	}
-	bs := service.CreateBotService(mongoDB, authDB)
-	bs := service.CreateBotService(mongoDB, &logger)
+	bs := service.CreateBotService(mongoDB, &logger, authDB)
 
 	rest := rest.CreateRestAPI(bs)
-
-    // NOTE(miha): Postgres database schema:
-    // table 'users':
-    //      id INT autoincrement
-    //      name VARCHAR(64)
-    //      password_hash VARCHAR(60)
-    // NOTE(miha): Add psql connection for the user auth.
-    pgUrl, err := pq.ParseURL("postgres://jxbacwyb:vtzIi6XdAepqt8miPVKnK4wOY1bMFhrb@snuffleupagus.db.elephantsql.com/jxbacwyb")
-    if err != nil {
-        fmt.Println("postgres parse url err: ", err)
-    }
-    pgDB, err := jet.Open("postgres", pgUrl)
-    if err != nil {
-        fmt.Println("postgres jet open err: ", err)
-    }
-    var users []*struct {
-        Id  int
-        Name string
-        PasswordHash []byte
-    }
-    err = pgDB.Query("SELECT * FROM users").Rows(&users)
-    if err != nil {
-    }
-    for _, user := range users {
-        fmt.Printf("id: %d, name: %s, hash: %s", user.Id, user.Name, user.PasswordHash)
-    }
 
 	/* NOTE(miha): How to check if Boter interface is implemented.
 	var pp interface{} = bs

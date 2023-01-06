@@ -54,12 +54,6 @@ type jwtClaims struct {
     jwt.RegisteredClaims
 }
 
-// Returns new 'BotService' struct with the given database 'd' connection.
-
-func CreateBotService(d *database.Database, ad *database.AuthDatabase) *BotService {
-    return &BotService{db: d, authDb: ad, botPID: make(map[string]*exec.Cmd)}
-}
-
 func (bs *BotService) Login(userName, pass string) (string, error) {
     // NOTE(miha): Get user with name 'userName' from the database, so we can
     // compare hashed passwords.
@@ -93,9 +87,11 @@ func (bs *BotService) Login(userName, pass string) (string, error) {
 	}
 
     return t, nil
+}
 
-func CreateBotService(d *database.Database, logger *zerolog.Logger) *BotService {
-    return &BotService{db: d, botPID: make(map[string]*exec.Cmd), Logger: logger}
+// Returns new 'BotService' struct with the given database 'd' connection.
+func CreateBotService(d *database.Database, logger *zerolog.Logger, ad *database.AuthDatabase) *BotService {
+    return &BotService{db: d, botPID: make(map[string]*exec.Cmd), Logger: logger, authDb: ad}
 }
 
 // Function 'BotNames' returns array '[]string' of all avaiable bot names.

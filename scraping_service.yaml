@@ -35,10 +35,8 @@ metadata:
 spec:
   selector:
     app: scraping-service-deployment
-  type: LoadBalancer  
+  type: ClusterIP
   ports:
     - protocol: TCP
       port: 1323
       targetPort: 1323
-      nodePort: 30000
-

@@ -5,6 +5,7 @@ import (
     "github.com/eaigner/jet"
     "github.com/lib/pq"
     "scraping_service/pkg/models"
+    "os"
 )
 
 type AuthPostgresDB struct {
@@ -12,7 +13,7 @@ type AuthPostgresDB struct {
 }
 
 func CreateAuthPostgresDB() *AuthPostgresDB {
-    uri := "postgres://jxbacwyb:vtzIi6XdAepqt8miPVKnK4wOY1bMFhrb@snuffleupagus.db.elephantsql.com/jxbacwyb"
+    uri := os.Getenv("PG_URI")
     pqUrl, err := pq.ParseURL(uri)
     if err != nil {
         fmt.Println("parse url err")
