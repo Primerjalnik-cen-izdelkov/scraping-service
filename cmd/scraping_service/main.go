@@ -77,7 +77,6 @@ func main() {
     // NOTE(miha): Create our logger
     logger := zerolog.New(os.Stdout)//.With().Timestamp().Caller().Logger()
 
-
 	e := echo.New()
 	e.Use(middleware.Recover())
     e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -156,9 +155,11 @@ DefaultLoggerConfig = LoggerConfig{
 	if err != nil {
 		fmt.Println("postgres auth err: ", err)
 	}
+    logger = zerolog.New(os.Stdout)//.With().Timestamp().Caller().Logger()
 	bs := service.CreateBotService(mongoDB, &logger, authDB)
     bs.Logger.Info().Str("jupi", "we are here")
     log.Info().Str("ahdfsa", "just log works?")
+    fmt.Println("Ce to dela....")
 
 	rest := rest.CreateRestAPI(bs)
 
