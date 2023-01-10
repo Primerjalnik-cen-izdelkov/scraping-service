@@ -103,6 +103,7 @@ DefaultLoggerConfig = LoggerConfig{
         },
         TargetHeader: "X-Request-Id",
     }))
+    /*
     e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
         LogURI:           true,
         LogStatus:        true,
@@ -134,6 +135,7 @@ DefaultLoggerConfig = LoggerConfig{
             return nil
         },
     }))
+    */
 
     // NOTE(miha): Setup prometheus metrics.
     p := prometheus.NewPrometheus("echo", nil)
