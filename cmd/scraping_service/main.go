@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
-	"github.com/labstack/gommon/log"
+	//"github.com/labstack/gommon/log"
 	"github.com/golang-jwt/jwt/v4"
 
     "github.com/rs/zerolog"
@@ -43,7 +43,6 @@ import (
 // @Success 200 {string} string "service version"
 // @Router /ping [get]
 func Ping(c echo.Context) error {
-    log.Infof("info from piong")
 	return c.String(http.StatusOK, os.Getenv("VERSION"))
 }
 
