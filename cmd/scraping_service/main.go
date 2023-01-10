@@ -41,6 +41,7 @@ import (
 // @Success 200 {string} string "service version"
 // @Router /ping [get]
 func Ping(c echo.Context) error {
+    fmt.Println("HMMMMMM")
 	return c.String(http.StatusOK, os.Getenv("VERSION"))
 }
 
