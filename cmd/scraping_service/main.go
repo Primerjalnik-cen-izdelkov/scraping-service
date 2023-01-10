@@ -73,9 +73,10 @@ type jwtClaims struct {
 // TODO(miha): Put this into env variable
 // @BasePath /v1
 func main() {
-    multi := zerolog.MultiLevelWriter(os.Stdout, os.Stderr)
+    //multi := zerolog.MultiLevelWriter(os.Stdout, os.Stderr)
     // NOTE(miha): Create our logger
-    logger := zerolog.New(multi).With().Timestamp().Caller().Logger()
+    logger := zerolog.New(os.Stdout)//.With().Timestamp().Caller().Logger()
+
 
 	e := echo.New()
 	e.Use(middleware.Recover())
