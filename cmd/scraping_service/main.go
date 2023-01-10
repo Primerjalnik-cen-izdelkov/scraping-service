@@ -16,6 +16,8 @@ import (
     "github.com/rs/xid"
     "github.com/labstack/echo-contrib/prometheus"
 
+    "github.com/ziflex/lecho/v3"
+
 	swaggerDocs "scraping_service/docs"
 	"scraping_service/internal/api/rest"
 	"scraping_service/internal/database"
@@ -80,6 +82,7 @@ func main() {
     logger := zerolog.New(os.Stdout)//.With().Timestamp().Caller().Logger()
 
 	e := echo.New()
+    e.Logger = lecho.From(logger)
 	e.Use(middleware.Recover())
     e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
         AllowOrigins: []string{"*"}, //[]string{os.Getenv("CORS_URI")},
@@ -103,7 +106,6 @@ DefaultLoggerConfig = LoggerConfig{
         },
         TargetHeader: "X-Request-Id",
     }))
-    /*
     e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
         LogURI:           true,
         LogStatus:        true,
@@ -135,7 +137,6 @@ DefaultLoggerConfig = LoggerConfig{
             return nil
         },
     }))
-    */
 
     // NOTE(miha): Setup prometheus metrics.
     p := prometheus.NewPrometheus("echo", nil)
@@ -159,7 +160,7 @@ DefaultLoggerConfig = LoggerConfig{
 	if err != nil {
 		fmt.Println("postgres auth err: ", err)
 	}
-    logger = zerolog.New(os.Stdout)//.With().Timestamp().Caller().Logger()
+
 	bs := service.CreateBotService(mongoDB, &logger, authDB)
     bs.Logger.Info().Str("jupi", "we are here")
     log.Info().Str("ahdfsa", "just log works?")
