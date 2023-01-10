@@ -42,6 +42,7 @@ import (
 // @Router /ping [get]
 func Ping(c echo.Context) error {
     fmt.Println("HMMMMMM")
+    log.Info().Str("ping", "just log works?")
 	return c.String(http.StatusOK, os.Getenv("VERSION"))
 }
 
