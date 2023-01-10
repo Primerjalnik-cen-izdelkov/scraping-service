@@ -401,6 +401,14 @@ func (api *RestAPI) GetBotCmds(c echo.Context) error {
 	return c.JSONPretty(http.StatusOK, models.JSONData{Data: data}, "  ")
 }
 
+// @Summary Get bot files for the given bot
+// @ID get_bot_files
+// @Tags bots
+// @Produce json
+// @Success 200 {object} models.JSONData
+// @Failure 500 {object} models.JSONError
+// @Param botName path string true "define for which bot we get files"
+// @Router /bots/{bot_name}/files [get]
 func (api *RestAPI) GetBotFiles(c echo.Context) error {
     // PATH params
 	botName := c.Param("bot_name")
@@ -409,6 +417,14 @@ func (api *RestAPI) GetBotFiles(c echo.Context) error {
     return api.GetFiles(c)
 }
 
+// @Summary Get bot logs for the given bot
+// @ID get_bot_logs
+// @Tags bots
+// @Produce json
+// @Success 200 {object} models.JSONData
+// @Failure 500 {object} models.JSONError
+// @Param botName path string true "define for which bot we get logs"
+// @Router /bots/{bot_name}/logs [get]
 func (api *RestAPI) GetBotLogs(c echo.Context) error {
 	// PATH params
 	botName := c.Param("bot_name")
@@ -445,6 +461,15 @@ func (api *RestAPI) GetBotLog(c echo.Context) error {
     return nil
 }
 
+// @Summary Get bot file for the given bot
+// @ID get_bot_files_file
+// @Tags bots
+// @Produce json
+// @Success 200 {object} models.JSONData
+// @Failure 500 {object} models.JSONError
+// @Param botName path string true "define for which bot we get logs"
+// @Param fileName path string true "define which file we want to get"
+// @Router /bots/{bot_name}/files/{file_name} [get]
 func (api *RestAPI) GetBotFile(c echo.Context) error {
 	// PATH params
 	botName := c.Param("bot_name")
@@ -453,6 +478,14 @@ func (api *RestAPI) GetBotFile(c echo.Context) error {
 	return c.Redirect(http.StatusPermanentRedirect, fmt.Sprintf("/data/%s/%s", botName, fileName))
 }
 
+// @Summary Start scraping given bot
+// @ID get_bot_cmd_scrape
+// @Tags bots
+// @Produce json
+// @Success 200 {object} models.JSONData
+// @Failure 500 {object} models.JSONError
+// @Param botName path string true "define for which bot we get logs"
+// @Router /bots/{bot_name}/cmd/scrape [post]
 func (api *RestAPI) PostBotCmdScrape(c echo.Context) error {
 	// PATH params
 	botName := c.Param("bot_name")
@@ -468,6 +501,14 @@ func (api *RestAPI) PostBotCmdScrape(c echo.Context) error {
     return c.JSONPretty(http.StatusOK, models.JSONData{Data: result}, "  ")
 }
 
+// @Summary Stop scraping given bot
+// @ID get_bot_cmd_stop
+// @Tags bots
+// @Produce json
+// @Success 200 {object} models.JSONData
+// @Failure 500 {object} models.JSONError
+// @Param botName path string true "define for which bot we get logs"
+// @Router /bots/{bot_name}/cmd/stop [post]
 func (api *RestAPI) PostBotCmdStop(c echo.Context) error {
 	// PATH params
 	botName := c.Param("bot_name")
@@ -477,6 +518,14 @@ func (api *RestAPI) PostBotCmdStop(c echo.Context) error {
     return c.JSONPretty(http.StatusOK, models.JSONData{Data: status}, "  ")
 }
 
+// @Summary Get status of scraping for the given bot
+// @ID get_bot_cmd_status
+// @Tags bots
+// @Produce json
+// @Success 200 {object} models.JSONData
+// @Failure 500 {object} models.JSONError
+// @Param botName path string true "define for which bot we get logs"
+// @Router /bots/{bot_name}/cmd/status [post]
 func (api *RestAPI) PostBotCmdStatus(c echo.Context) error {
 	// PATH params
 	botName := c.Param("bot_name")

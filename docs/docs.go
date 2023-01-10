@@ -345,6 +345,111 @@ const docTemplate = `{
                 }
             }
         },
+        "/bots/{bot_name}/cmd/scrape": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Start scraping given bot",
+                "operationId": "get_bot_cmd_scrape",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "define for which bot we get logs",
+                        "name": "botName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/bots/{bot_name}/cmd/status": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Get status of scraping for the given bot",
+                "operationId": "get_bot_cmd_status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "define for which bot we get logs",
+                        "name": "botName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/bots/{bot_name}/cmd/stop": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Stop scraping given bot",
+                "operationId": "get_bot_cmd_stop",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "define for which bot we get logs",
+                        "name": "botName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
         "/bots/{bot_name}/cmds": {
             "get": {
                 "produces": [
@@ -359,6 +464,118 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "define for which bot we get commands",
+                        "name": "botName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/bots/{bot_name}/files": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Get bot files for the given bot",
+                "operationId": "get_bot_files",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "define for which bot we get files",
+                        "name": "botName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/bots/{bot_name}/files/{file_name}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Get bot file for the given bot",
+                "operationId": "get_bot_files_file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "define for which bot we get logs",
+                        "name": "botName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "define which file we want to get",
+                        "name": "fileName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONData"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/bots/{bot_name}/logs": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bots"
+                ],
+                "summary": "Get bot logs for the given bot",
+                "operationId": "get_bot_logs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "define for which bot we get logs",
                         "name": "botName",
                         "in": "path",
                         "required": true

@@ -48,6 +48,75 @@ paths:
       summary: Returns array of all avaiable bots.
       tags:
       - bots
+  /bots/{bot_name}/cmd/scrape:
+    post:
+      operationId: get_bot_cmd_scrape
+      parameters:
+      - description: define for which bot we get logs
+        in: path
+        name: botName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Start scraping given bot
+      tags:
+      - bots
+  /bots/{bot_name}/cmd/status:
+    post:
+      operationId: get_bot_cmd_status
+      parameters:
+      - description: define for which bot we get logs
+        in: path
+        name: botName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Get status of scraping for the given bot
+      tags:
+      - bots
+  /bots/{bot_name}/cmd/stop:
+    post:
+      operationId: get_bot_cmd_stop
+      parameters:
+      - description: define for which bot we get logs
+        in: path
+        name: botName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Stop scraping given bot
+      tags:
+      - bots
   /bots/{bot_name}/cmds:
     get:
       operationId: get_bot_cmd
@@ -69,6 +138,80 @@ paths:
           schema:
             $ref: '#/definitions/models.JSONError'
       summary: Get bot commands for the given bot
+      tags:
+      - bots
+  /bots/{bot_name}/files:
+    get:
+      operationId: get_bot_files
+      parameters:
+      - description: define for which bot we get files
+        in: path
+        name: botName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Get bot files for the given bot
+      tags:
+      - bots
+  /bots/{bot_name}/files/{file_name}:
+    get:
+      operationId: get_bot_files_file
+      parameters:
+      - description: define for which bot we get logs
+        in: path
+        name: botName
+        required: true
+        type: string
+      - description: define which file we want to get
+        in: path
+        name: fileName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Get bot file for the given bot
+      tags:
+      - bots
+  /bots/{bot_name}/logs:
+    get:
+      operationId: get_bot_logs
+      parameters:
+      - description: define for which bot we get logs
+        in: path
+        name: botName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.JSONData'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.JSONError'
+      summary: Get bot logs for the given bot
       tags:
       - bots
   /bots/cmd:

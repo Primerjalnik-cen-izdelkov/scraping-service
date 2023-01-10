@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-    "path"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -12,9 +11,7 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/golang-jwt/jwt/v4"
 
-    "github.com/go-ping/ping"
     "github.com/rs/zerolog"
-    "gopkg.in/Graylog2/go-gelf.v1/gelf"
     "github.com/rs/xid"
     "github.com/labstack/echo-contrib/prometheus"
 
@@ -75,46 +72,9 @@ type jwtClaims struct {
 // TODO(miha): Put this into env variable
 // @BasePath /v1
 func main() {
-    // NOTE(miha): Init logger
-    graylogAddress := os.Getenv("GRAYLOG_ADDR") 
-    // TODO(miha): ENV to set global level of graylog
-    gelfWriter, err := gelf.NewWriter(graylogAddress)
-    useGraylog := true
-
-    // NOTE(miha): Create a logging file, get name from the ENV variable
-    // LOG_FILE.
-    logFileName := os.Getenv("LOG_FILE")
-    logFile, err := os.OpenFile(
-        path.Join("/logs", logFileName),
-        os.O_APPEND|os.O_CREATE|os.O_WRONLY,
-        0664,
-    )
-    if err != nil {
-        fmt.Printf("Cannot create file %s\n", logFileName)
-        fmt.Println(err)
-    }
-    defer logFile.Close()
-
-    // NOTE(miha): Try to ping graylog address. If it is not accessible, don't
-    // add gelfWriter as a zerolog source.
-    pinger, err := ping.NewPinger(graylogAddress)
-    if err != nil {
-        useGraylog = false
-        fmt.Printf("Logging service graylog at address %s is not avaiable.\n", graylogAddress)
-    }
-
-    // NOTE(miha): Add sources to zerolog, ie. add or ignore gelfWriter.
-    var multi zerolog.LevelWriter
-    if useGraylog {
-        multi = zerolog.MultiLevelWriter(os.Stdout, logFile, gelfWriter)
-    } else {
-        multi = zerolog.MultiLevelWriter(os.Stdout, logFile)
-    }
-
+    multi := zerolog.MultiLevelWriter(os.Stdout)
     // NOTE(miha): Create our logger
     logger := zerolog.New(multi).With().Timestamp().Caller().Logger()
-
-    _, _, _, _, _ = gelfWriter, pinger, logFile, multi, logger
 
 	e := echo.New()
 	e.Use(middleware.Recover())
@@ -195,6 +155,7 @@ DefaultLoggerConfig = LoggerConfig{
 		fmt.Println("postgres auth err: ", err)
 	}
 	bs := service.CreateBotService(mongoDB, &logger, authDB)
+    bs.Logger.Info().Str("jupi", "we are here")
 
 	rest := rest.CreateRestAPI(bs)
 
