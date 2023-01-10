@@ -12,6 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 
     "github.com/rs/zerolog"
+    "github.com/rs/zerolog/log"
     "github.com/rs/xid"
     "github.com/labstack/echo-contrib/prometheus"
 
@@ -156,6 +157,7 @@ DefaultLoggerConfig = LoggerConfig{
 	}
 	bs := service.CreateBotService(mongoDB, &logger, authDB)
     bs.Logger.Info().Str("jupi", "we are here")
+    log.Info().Str("ahdfsa", "just log works?")
 
 	rest := rest.CreateRestAPI(bs)
 
