@@ -9,10 +9,10 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/golang-jwt/jwt/v4"
 
     "github.com/rs/zerolog"
-    "github.com/rs/zerolog/log"
     "github.com/rs/xid"
     "github.com/labstack/echo-contrib/prometheus"
 
@@ -43,9 +43,7 @@ import (
 // @Success 200 {string} string "service version"
 // @Router /ping [get]
 func Ping(c echo.Context) error {
-    fmt.Println("HMMMMMM")
-    c.Logger().Info("HFDSHFHDS")
-    log.Info().Str("ping", "just log works?")
+    log.Infof("info from piong")
 	return c.String(http.StatusOK, os.Getenv("VERSION"))
 }
 
@@ -164,7 +162,6 @@ DefaultLoggerConfig = LoggerConfig{
 
 	bs := service.CreateBotService(mongoDB, &logger, authDB)
     bs.Logger.Info().Str("jupi", "we are here")
-    log.Info().Str("ahdfsa", "just log works?")
     fmt.Println("Ce to dela....")
 
 	rest := rest.CreateRestAPI(bs)

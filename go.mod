@@ -14,6 +14,7 @@ require (
 	github.com/labstack/echo-contrib v0.13.0 // indirect
 	github.com/labstack/echo-jwt/v4 v4.0.0 // indirect
 	github.com/labstack/echo/v4 v4.9.1
+	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/pasztorpisti/qs v0.0.0-20171216220353-8d6c33ee906c
