@@ -475,7 +475,7 @@ func (api *RestAPI) GetBotFile(c echo.Context) error {
 	botName := c.Param("bot_name")
     fileName := c.Param("file_name")
 
-	return c.Redirect(http.StatusPermanentRedirect, fmt.Sprintf("/data/%s/%s", botName, fileName))
+	return c.Redirect(http.StatusPermanentRedirect, fmt.Sprintf("/scraping-service/data/%s/%s", botName, fileName))
 }
 
 // @Summary Start scraping given bot
